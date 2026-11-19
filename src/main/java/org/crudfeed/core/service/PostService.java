@@ -2,9 +2,14 @@ package org.crudfeed.core.service;
 
 import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.repository.PostRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+@Service
+@Transactional
 public class PostService {
 
     private final PostRepository postRepository;
@@ -15,22 +20,27 @@ public class PostService {
     }
 
 
-    public String createPost(long userId, String content) {
+    public Post createPost(long userId, String content) {
         if (content == null || content.isBlank()) {
-            return "Post cannot be empty!";
+            throw new IllegalArgumentException("Post cannot be empty!");
         }
-
         if (content.length() > 2000) {
-            return "Post is too long! Max length is 2000 characters!";
+            throw new IllegalArgumentException("Post is too long! Max length is 2000 characters!");
         }
 
-        return postRepository.createPost(userId, content)
-                ? "Post successfully created!"
-                : "Could not create post!";
+        Post post = Post.builder()
+                .userId(userId)
+                .content(content)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .deleted(false)
+                .build();
+
+        return postRepository.createPost(post);
     }
 
 
-    public String updatePost(long postId, String content, long userId) {
+    public String editPost(long postId, String content, long userId) {
         if (content == null || content.isBlank()) {
             return "Post cannot be empty!";
         }

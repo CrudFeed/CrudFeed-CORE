@@ -2,7 +2,10 @@ package org.crudfeed.core.service;
 
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class UserService {
 
     private final UserRepository userRepository;
@@ -21,12 +24,18 @@ public class UserService {
         return userRepository.unsubscribe(subscriberId, name);
     }
 
+    @Transactional
     public User viewAccountPage(String nickname) {
         if (nickname == null || nickname.isEmpty()) {
             return null;
         }
 
-        return userRepository.viewAccountPage(nickname);
+        User user = userRepository.viewAccountPage(nickname);
+//        if (user != null) {
+//            user.getSubscribers().size();
+//            user.getSubscriptions().size();
+//        }
+        return user;
     }
 
     public String editAccountPage(long userId, String content) {
