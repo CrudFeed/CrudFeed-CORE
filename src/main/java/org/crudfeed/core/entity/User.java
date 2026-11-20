@@ -5,15 +5,16 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
-@Entity
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 @Table(name = "users")
 public class User {
 
@@ -24,41 +25,50 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(unique = true, nullable =false)
+    @Column(unique = true, nullable = false)
     private String nickname;
 
-    @Column(name = "display_name", nullable =false)
+    @Column(name = "display_name", nullable = false)
     private String displayName;
 
     @Column(nullable = false)
     private String password;
 
+    @Column(columnDefinition = "TEXT")
     private String bio;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role = Role.USER;
 
     @Column(name = "avatar_url")
     private String avatarUrl;
 
     @Column(name = "last_seen")
-    private OffsetDateTime lastSeen;
+    private Instant lastSeen;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 
-    private boolean banned;
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean banned = false;
 
-    @Column(name = "is_verified_email")
-    private boolean isVerifiedEmail;
+    @Builder.Default
+    @Column(name = "is_verified_email", nullable = false)
+    private boolean verifiedEmail = false;
 
-    private boolean deleted;
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean deleted = false;
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "user_subscribes",
@@ -66,4 +76,16 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "subscribed_user_id")
     )
     private Set<User> subscriptions = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User other)) return false;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

@@ -1,17 +1,19 @@
 package org.crudfeed.core.repository;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.util.HibernateUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class UserRepository {
 
     private final SessionFactory sessionFactory;
     private final BCryptPasswordEncoder encoder;
-
 
     public UserRepository() {
         this.sessionFactory = HibernateUtil.getSessionFactory();
@@ -19,12 +21,26 @@ public class UserRepository {
     }
 
     public User signUp(User user) {
-        user.setBio("");
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
-            session.persist(user);
-            transaction.commit();
-            return user;
+            try {
+                session.persist(user);
+                transaction.commit();
+                return user;
+            } catch (Exception e) {
+                if (transaction != null && transaction.isActive()) {
+                    transaction.rollback();
+                }
+                throw new RuntimeException("Error saving user: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    public User findByEmail(String email) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM User WHERE email = :email", User.class)
+                    .setParameter("email", email)
+                    .uniqueResult();
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -33,8 +49,8 @@ public class UserRepository {
 
     public User findByNickname(String nickname) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM User WHERE nickname = :nick", User.class)
-                    .setParameter("nick", nickname)
+            return session.createQuery("FROM User WHERE nickname = :name", User.class)
+                    .setParameter("name", nickname)
                     .uniqueResult();
         } catch (Exception e) {
             e.printStackTrace();
@@ -42,16 +58,13 @@ public class UserRepository {
         }
     }
 
-    public String subscribe(long subscriberId, String name) {
+    public String subscribe(long subscriberId, String nickname) {
         try (Session session = sessionFactory.openSession()) {
-            Transaction transaction = session.beginTransaction();
-
             User subscriber = session.get(User.class, subscriberId);
 
             User userToSubscribe = session.createQuery(
-                            "FROM User WHERE nickname = :name", User.class
-                    ).setParameter("name", name)
-                    .uniqueResult();
+                            "FROM User WHERE nickname = :nickname", User.class)
+                    .setParameter("nickname", nickname).uniqueResult();
 
             if (subscriber == null || userToSubscribe == null) {
                 return "User not found!";
@@ -61,30 +74,30 @@ public class UserRepository {
                 return "Cannot subscribe to yourself!";
             }
 
-            if (subscriber.getSubscriptions().contains(userToSubscribe)) {
-                return "User is already subscribed!";
+            Transaction transaction = session.beginTransaction();
+            try {
+                if (subscriber.getSubscriptions().contains(userToSubscribe)) {
+                    transaction.rollback();
+                    return "User is already subscribed!";
+                }
+
+                subscriber.getSubscriptions().add(userToSubscribe);
+                transaction.commit();
+                return "User subscribed!";
+            } catch (Exception e) {
+                e.printStackTrace();
+                return "Something went wrong!";
             }
-
-            subscriber.getSubscriptions().add(userToSubscribe);
-
-            transaction.commit();
-
-            return "User subscribed!";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Something went wrong!";
         }
     }
 
-    public String unsubscribe(long subscriberId, String name) {
+    public String unsubscribe(long subscriberId, String nickname) {
         try (Session session = sessionFactory.openSession()) {
-
             User subscriber = session.get(User.class, subscriberId);
 
             User userToUnsubscribe = session.createQuery(
-                            "FROM User WHERE nickname = :name", User.class
-                    ).setParameter("name", name)
-                    .uniqueResult();
+                            "FROM User WHERE nickname = :nickname", User.class)
+                    .setParameter("nickname", nickname).uniqueResult();
 
             if (subscriber == null || userToUnsubscribe == null) {
                 return "User not found!";
@@ -95,21 +108,20 @@ public class UserRepository {
             }
 
             Transaction transaction = session.beginTransaction();
+            try {
+                if (!subscriber.getSubscriptions().contains(userToUnsubscribe)) {
+                    transaction.rollback();
+                    return "User is already unsubscribed!";
+                }
 
-            if (!subscriber.getSubscriptions().contains(userToUnsubscribe)) {
+                subscriber.getSubscriptions().remove(userToUnsubscribe);
+                transaction.commit();
+                return "User unsubscribed!";
+            } catch (Exception e) {
                 transaction.rollback();
-                return "User is not subscribed!";
+                e.printStackTrace();
+                return "Something went wrong!";
             }
-
-            subscriber.getSubscriptions().remove(userToUnsubscribe);
-
-            transaction.commit();
-
-            return "Unsubscribed successfully!";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error!";
         }
     }
 
@@ -141,7 +153,6 @@ public class UserRepository {
 
     public User viewAccountPage(String nickname) {
         try (Session session = sessionFactory.openSession()) {
-
             User user = session.createQuery(
                             "FROM User u WHERE u.nickname = :name",
                             User.class)
@@ -149,11 +160,10 @@ public class UserRepository {
                     .uniqueResult();
 
             if (user != null) {
-                user.getSubscriptions().size();
+                Hibernate.initialize(user.getSubscriptions());
             }
 
             return user;
-
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -161,24 +171,22 @@ public class UserRepository {
     }
 
     public boolean editAccountPage(long userId, String bio) {
-        String hql = """
-            update User set bio = :userBio where id = :userId
-            """;
-
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction transaction = session.beginTransaction();
+            try {
+                int updatedRows = session.createMutationQuery("update User set bio = :userBio where id = :userId")
+                        .setParameter("userBio", bio)
+                        .setParameter("userId", userId)
+                        .executeUpdate();
 
-            int updatedRows = session.createMutationQuery(hql)
-                    .setParameter("userBio", bio)
-                    .setParameter("userId", userId)
-                    .executeUpdate();
+                transaction.commit();
 
-            transaction.commit();
-
-            return updatedRows > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+                return updatedRows > 0;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
@@ -190,7 +198,6 @@ public class UserRepository {
                     .uniqueResult();
 
             return nickname != null ? nickname : "";
-
         } catch (Exception e) {
             e.printStackTrace();
             return "";
@@ -204,79 +211,78 @@ public class UserRepository {
                     .uniqueResult();
 
             return id != null ? id : 0L;
-
         } catch (Exception e) {
             e.printStackTrace();
             return -1L;
         }
     }
 
-    public boolean newName(String nickname, long user_id) {
+    public boolean newName(String nickname, long userId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
-
-            User user = session.get(User.class, user_id);
-
-            if (user != null) {
-                user.setNickname(nickname);
+            try {
+                int updatedRows = session.createMutationQuery("update User set nickname = :nickname where id = :id")
+                        .setParameter("nickname", nickname)
+                        .setParameter("id", userId)
+                        .executeUpdate();
 
                 transaction.commit();
-                return true;
+                return updatedRows > 0;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
             }
-
-            return false;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
-    public boolean newPass(String incomingHash, long user_id) {
+    public boolean newPass(String incomingHash, long userId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
+            try {
+                User user = session.get(User.class, userId);
 
-            User user = session.get(User.class, user_id);
+                if (user != null) {
+                    String bcryptHash = encoder.encode(incomingHash);
+                    user.setPassword(bcryptHash);
 
-            if (user != null) {
-                String bcryptHash = encoder.encode(incomingHash);
-                user.setPassword(bcryptHash);
+                    transaction.commit();
+                    return true;
+                }
 
-                transaction.commit();
-                return true;
+                return false;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
             }
-
-            return false;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
-    public boolean deleteUser(long user_id) {
+    public boolean deleteUser(long userId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
+            try {
+                session.createMutationQuery("delete from Post where userId = :id")
+                        .setParameter("id", userId)
+                        .executeUpdate();
 
-            session.createMutationQuery("delete from Post where userId = :id")
-                    .setParameter("id", user_id)
-                    .executeUpdate();
+                session.createMutationQuery("delete from Message where senderId = :id or receiverId = :id")
+                        .setParameter("id", userId)
+                        .executeUpdate();
 
-            session.createMutationQuery("delete from Message where senderId = :id or receiverId = :id")
-                    .setParameter("id", user_id)
-                    .executeUpdate();
+                int deletedUsers = session.createMutationQuery("delete from User where id = :id")
+                        .setParameter("id", userId)
+                        .executeUpdate();
 
-            int deletedUsers = session.createMutationQuery("delete from User where id = :id")
-                    .setParameter("id", user_id)
-                    .executeUpdate();
+                transaction.commit();
 
-            transaction.commit();
-
-            return deletedUsers > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+                return deletedUsers > 0;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 }

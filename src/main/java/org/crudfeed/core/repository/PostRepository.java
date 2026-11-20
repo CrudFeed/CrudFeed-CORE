@@ -6,9 +6,11 @@ import org.hibernate.Transaction;
 import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.util.HibernateUtil;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public class PostRepository {
 
     private final SessionFactory sessionFactory;
@@ -17,32 +19,28 @@ public class PostRepository {
         this.sessionFactory = HibernateUtil.getSessionFactory();
     }
 
-    public boolean createPost(long user_id, String content) {
-        Post post = new Post(user_id, content);
-
+    public boolean createPost(Post post) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
-
-            session.persist(post);
-
-            transaction.commit();
-            return true;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            try {
+                session.persist(post);
+                transaction.commit();
+                return true;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
     public boolean updatePost(long postId, String content, long user_id) {
-        String hql = """
-                update Post set text = :content where id = :postId and userId = :userId
-                """;
-
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
 
-            int updatedRows = session.createMutationQuery(hql)
+            int updatedRows = session.createMutationQuery(
+                    "update Post set content = :content where id = :postId and userId = :userId"
+                    )
                     .setParameter("content", content)
                     .setParameter("postId", postId)
                     .setParameter("userId", user_id)
@@ -59,14 +57,10 @@ public class PostRepository {
     }
 
     public boolean deletePost(long postId, long userId) {
-        String hql = """
-                delete from Post where id = :postId and userId = :userId
-                """;
-
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
 
-            session.createMutationQuery(hql)
+            session.createMutationQuery("delete from Post where id = :postId and userId = :userId")
                     .setParameter("postId", postId)
                     .setParameter("userId", userId)
                     .executeUpdate();
@@ -82,7 +76,9 @@ public class PostRepository {
 
     public List<Post> viewFeed() {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM Post p ORDER BY p.createdAt ASC", Post.class).getResultList();
+            return session.createQuery(
+                    "FROM Post p WHERE p.deleted = false ORDER BY p.createdAt ASC", Post.class
+                    ).getResultList();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -90,71 +86,73 @@ public class PostRepository {
         }
     }
 
-    public List<Post> showUserPostsById(long userId) {
-        try (Session session = sessionFactory.openSession()) {
-            return session.createQuery(
-                            "SELECT p\n" +
-                                    "FROM Post p\n" +
-                                    "JOIN p.likedByUsers u\n" +
-                                    "WHERE u.id = :userId",
-                            Post.class)
-                    .setParameter("userId", userId)
-                    .getResultList();
+// TODO: REWORK POST REPO
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return List.of();
-        }
-    }
-
-    public List<Post> showUserLikes(long userId) {
-        try (Session session = sessionFactory.openSession()) {
-            return session.createQuery(
-                            "SELECT p FROM Post p " +
-                                    "JOIN FETCH p.user " +
-                                    "WHERE p.user.id = :userId",
-                            Post.class)
-                    .setParameter("userId", userId)
-                    .getResultList();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return List.of();
-        }
-    }
-
-    public Post searchPostById(long id) {
-        try (Session session = sessionFactory.openSession()) {
-            return session.createQuery(
-                            "SELECT p FROM Post p " +
-                                    "JOIN FETCH p.user " +
-                                    "WHERE p.id = :id",
-                            Post.class)
-                    .setParameter("id", id)
-                    .uniqueResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public List<Post> searchPostByWords(String keyword) {
-        try (Session session = sessionFactory.openSession()) {
-            return session.createQuery(
-                            "FROM Post p " +
-                                    "JOIN FETCH p.user " +
-                                    "WHERE lower(p.text) " +
-                                    "LIKE lower(:word) " +
-                                    "ORDER BY p.createdAt ASC",
-                            Post.class)
-
-                    .setParameter("word", "%" + keyword + "%")
-                    .getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return List.of();
-        }
-    }
+//    public List<Post> showUserPostsById(long userId) {
+//        try (Session session = sessionFactory.openSession()) {
+//            return session.createQuery(
+//                            "SELECT p\n" +
+//                                    "FROM Post p\n" +
+//                                    "JOIN p.likedByUsers u\n" +
+//                                    "WHERE u.id = :userId",
+//                            Post.class)
+//                    .setParameter("userId", userId)
+//                    .getResultList();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return List.of();
+//        }
+//    }
+//
+//    public List<Post> showUserLikes(long userId) {
+//        try (Session session = sessionFactory.openSession()) {
+//            return session.createQuery(
+//                            "SELECT p FROM Post p " +
+//                                    "JOIN FETCH p.user " +
+//                                    "WHERE p.user.id = :userId",
+//                            Post.class)
+//                    .setParameter("userId", userId)
+//                    .getResultList();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return List.of();
+//        }
+//    }
+//
+//    public Post searchPostById(long id) {
+//        try (Session session = sessionFactory.openSession()) {
+//            return session.createQuery(
+//                            "SELECT p FROM Post p " +
+//                                    "JOIN FETCH p.user " +
+//                                    "WHERE p.id = :id",
+//                            Post.class)
+//                    .setParameter("id", id)
+//                    .uniqueResult();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+//
+//    public List<Post> searchPostByWords(String keyword) {
+//        try (Session session = sessionFactory.openSession()) {
+//            return session.createQuery(
+//                            "FROM Post p " +
+//                                    "JOIN FETCH p.user " +
+//                                    "WHERE lower(p.text) " +
+//                                    "LIKE lower(:word) " +
+//                                    "ORDER BY p.createdAt ASC",
+//                            Post.class)
+//
+//                    .setParameter("word", "%" + keyword + "%")
+//                    .getResultList();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return List.of();
+//        }
+//    }
 
     public String likePost(long postId, long userId) {
         try (Session session = sessionFactory.openSession()) {
@@ -167,12 +165,12 @@ public class PostRepository {
                 return "Post not found!";
             }
 
-            if (post.getLikedByUsers().contains(user)) {
-                return "Post already liked!";
-            }
-
-            post.getLikedByUsers().add(user);
-            post.setLikes(post.getLikes() + 1);
+//            if (post.getLikedByUsers().contains(user)) {
+//                return "Post already liked!";
+//            }
+//
+//            post.getLikedByUsers().add(user);
+//            post.setLikes(post.getLikes() + 1);
 
             session.merge(post);
             transaction.commit();
@@ -196,12 +194,12 @@ public class PostRepository {
                 return "Post not found!";
             }
 
-            if (!post.getLikedByUsers().contains(user)) {
-                return "You have not liked this post yet!";
-            }
-
-            post.getLikedByUsers().remove(user);
-            post.setLikes(Math.max(0, post.getLikes() - 1));
+//            if (!post.getLikedByUsers().contains(user)) {
+//                return "You have not liked this post yet!";
+//            }
+//
+//            post.getLikedByUsers().remove(user);
+//            post.setLikes(Math.max(0, post.getLikes() - 1));
 
             session.merge(post);
             transaction.commit();

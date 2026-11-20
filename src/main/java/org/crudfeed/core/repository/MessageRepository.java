@@ -5,9 +5,11 @@ import org.hibernate.SessionFactory;
 import org.crudfeed.core.entity.Message;
 import org.crudfeed.core.util.HibernateUtil;
 import org.hibernate.Transaction;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public class MessageRepository {
 
     private final SessionFactory sessionFactory;
@@ -16,20 +18,18 @@ public class MessageRepository {
         this.sessionFactory = HibernateUtil.getSessionFactory();
     }
 
-    public boolean writeMessage(long senderId, long receiverId, String text) {
-        Message message = new Message(senderId, receiverId, text);
-
+    public boolean writeMessage(Message message) {
         try (Session session = sessionFactory.openSession()) {
-
-            session.beginTransaction();
-            session.persist(message);
-            session.getTransaction().commit();
-
-            return true;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            Transaction transaction = session.beginTransaction();
+            try {
+                session.persist(message);
+                transaction.commit();
+                return true;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
@@ -53,57 +53,53 @@ public class MessageRepository {
         }
     }
 
-    public boolean editMessage(long messageId, String text, long senderId) {
+    public boolean editMessage(long messageId, String content, long senderId) {
         String hql = """
             update Message
-            set text = :text
+            set content = :content
             where id = :messageId
             and senderId = :senderId
             """;
 
         try (Session session = sessionFactory.openSession()) {
-
             Transaction transaction = session.beginTransaction();
+            try {
+                int updatedRows = session.createMutationQuery(hql)
+                        .setParameter("content", content)
+                        .setParameter("messageId", messageId)
+                        .setParameter("senderId", senderId)
+                        .executeUpdate();
 
-            int updatedRows = session.createMutationQuery(hql)
-                    .setParameter("text", text)
-                    .setParameter("messageId", messageId)
-                    .setParameter("senderId", senderId)
-                    .executeUpdate();
+                transaction.commit();
 
-            transaction.commit();
-
-            return updatedRows > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+                return updatedRows > 0;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
     public boolean deleteMessage(long messageId, long senderId) {
-        String hql = """
-            delete from Message
-            where id = :messageId
-            and senderId = :senderId
-            """;
-
         try (Session session = sessionFactory.openSession()) {
-
             Transaction transaction = session.beginTransaction();
+            try {
+                int deletedRows = session.createMutationQuery(
+                                "delete from Message where id = :messageId and senderId = :senderId"
+                        )
+                        .setParameter("messageId", messageId)
+                        .setParameter("senderId", senderId)
+                        .executeUpdate();
 
-            int deletedRows = session.createMutationQuery(hql)
-                    .setParameter("messageId", messageId)
-                    .setParameter("senderId", senderId)
-                    .executeUpdate();
+                transaction.commit();
 
-            transaction.commit();
-
-            return deletedRows > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+                return deletedRows > 0;
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 }

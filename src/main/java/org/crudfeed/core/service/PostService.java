@@ -20,25 +20,24 @@ public class PostService {
     }
 
 
-    public Post createPost(long userId, String content) {
+    public String createPost(long userId, String content) {
         if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("Post cannot be empty!");
+            return "Post cannot be empty!";
         }
+
         if (content.length() > 2000) {
-            throw new IllegalArgumentException("Post is too long! Max length is 2000 characters!");
+            return "Post is too long! Max length is 2000 characters!";
         }
 
         Post post = Post.builder()
                 .userId(userId)
                 .content(content)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .deleted(false)
                 .build();
 
-        return postRepository.createPost(post);
+        return postRepository.createPost(post)
+                ? "Post created!"
+                : "Could not create post!";
     }
-
 
     public String editPost(long postId, String content, long userId) {
         if (content == null || content.isBlank()) {
@@ -62,44 +61,46 @@ public class PostService {
                 : "Could not delete post!";
     }
 
-
     public List<Post> viewFeed() { return postRepository.viewFeed(); }
 
-    public List<Post> showUserPostsById(long userId) {
-        if (userId <= 0) {
-            return List.of();
-        }
+// TODO: REWORK POST SERVICE
 
-        return postRepository.showUserPostsById(userId);
-    }
-
-    public List<Post> showUserLikes(long userId) {
-        if (userId <= 0) {
-            return List.of();
-        }
-
-        return postRepository.showUserLikes(userId);
-    }
-
-    public Post searchPostById(long postId) {
-        if (postId <= 0) {
-            return (Post) List.of();
-        }
-
-        return postRepository.searchPostById(postId);
-    }
-
-    public List<Post> searchPostByWords(String content) {
-        if (content == null || content.isBlank()) {
-            return List.of();
-        }
-
-        if (content.length() > 2000) {
-            return  List.of();
-        }
-
-        return postRepository.searchPostByWords(content);
-    }
+//
+//    public List<Post> showUserPostsById(long userId) {
+//        if (userId <= 0) {
+//            return List.of();
+//        }
+//
+//        return postRepository.showUserPostsById(userId);
+//    }
+//
+//    public List<Post> showUserLikes(long userId) {
+//        if (userId <= 0) {
+//            return List.of();
+//        }
+//
+//        return postRepository.showUserLikes(userId);
+//    }
+//
+//    public Post searchPostById(long postId) {
+//        if (postId <= 0) {
+//            return (Post) List.of();
+//        }
+//
+//        return postRepository.searchPostById(postId);
+//    }
+//
+//    public List<Post> searchPostByWords(String content) {
+//        if (content == null || content.isBlank()) {
+//            return List.of();
+//        }
+//
+//        if (content.length() > 2000) {
+//            return  List.of();
+//        }
+//
+//        return postRepository.searchPostByWords(content);
+//    }
 
     public String likePost(long postId, long userId) {
         return postRepository.likePost(postId, userId);

@@ -19,18 +19,24 @@ public class MessageService {
     }
 
 
-    public String sendMessage(long senderId, long receiverId, String text) {
-        if (receiverId == -1 || text == null || text.isBlank()) {
-            return "Something went wrong!";
+    public String sendMessage(long senderId, long receiverId, String content) {
+        if (senderId <= 0 || receiverId <= 0 || senderId == receiverId) {
+            return "Invalid sender or receiver!";
+        }
+        if (content == null || content.isBlank()) {
+            return "Message cannot be empty!";
         }
 
-        boolean isSent = messageRepository.writeMessage(senderId, receiverId, text);
+        Message message = Message.builder()
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .content(content)
+                .build();
 
-        return isSent
-                ? "Message sent successfully!"
-                : "Failed to send message!";
+        return messageRepository.writeMessage(message)
+                ? "Message sent!"
+                : "Could not create message!";
     }
-
 
     public List<Message> viewMessages(long senderId, long receiverId) {
         if (receiverId == -1) {

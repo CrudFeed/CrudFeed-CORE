@@ -2,15 +2,24 @@ package org.crudfeed.core.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Data
-@Entity
+@Getter
+@Setter
 @Builder
-@Table(name = "posts")
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(
+        name = "posts",
+        indexes = {
+                @Index(name = "idx_posts_user_created", columnList = "user_id, created_at"),
+                @Index(name = "idx_posts_created_at", columnList = "created_at")
+        }
+)
 public class Post {
 
     @Id
@@ -23,12 +32,27 @@ public class Post {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean deleted = false;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Post other)) return false;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
