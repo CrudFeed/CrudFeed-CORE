@@ -22,6 +22,22 @@ public class MessageRepository {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
+                Long exists = session.createQuery(
+                                "select count(u.id) " +
+                                        "from User u " +
+                                        "where u.id = :receiverId " +
+                                        "and u.deleted = false " +
+                                        "and u.banned = false",
+                                Long.class
+                        )
+                        .setParameter("receiverId", message.getReceiverId())
+                        .getSingleResult();
+
+                if (exists == null || exists == 0) {
+                    transaction.rollback();
+                    return false;
+                }
+
                 session.persist(message);
                 transaction.commit();
                 return true;
