@@ -85,6 +85,9 @@ public class UserRepository {
                 transaction.commit();
                 return "User subscribed!";
             } catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return "Something went wrong!";
             }
@@ -118,7 +121,9 @@ public class UserRepository {
                 transaction.commit();
                 return "User unsubscribed!";
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return "Something went wrong!";
             }
@@ -183,7 +188,9 @@ public class UserRepository {
 
                 return updatedRows > 0;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return false;
             }
@@ -238,7 +245,9 @@ public class UserRepository {
                 transaction.commit();
                 return updatedRows > 0;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return false;
             }
@@ -261,7 +270,9 @@ public class UserRepository {
 
                 return false;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return false;
             }
@@ -272,15 +283,24 @@ public class UserRepository {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
-                session.createMutationQuery("delete from Post where userId = :id")
-                        .setParameter("id", userId)
+                session.createMutationQuery("update Post p set deleted = true where p.userId = :userId")
+                        .setParameter("userId", userId)
                         .executeUpdate();
 
-                session.createMutationQuery("delete from Message where senderId = :id or receiverId = :id")
-                        .setParameter("id", userId)
+                session.createMutationQuery(
+                        "update Message m " +
+                                "set deleted = true " +
+                                "where m.senderId = :userId " +
+                                "or m.receiverId = :userId"
+                        )
+                        .setParameter("userId", userId)
                         .executeUpdate();
 
-                int deletedUsers = session.createMutationQuery("delete from User where id = :id")
+                int deletedUsers = session.createMutationQuery(
+                        "update User u " +
+                                "set deleted = true " +
+                                "where u.id = :userId"
+                        )
                         .setParameter("id", userId)
                         .executeUpdate();
 
@@ -288,7 +308,15 @@ public class UserRepository {
 
                 return deletedUsers > 0;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
                 e.printStackTrace();
                 return false;
             }

@@ -27,7 +27,9 @@ public class PostRepository {
                 transaction.commit();
                 return true;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return false;
             }
@@ -37,40 +39,46 @@ public class PostRepository {
     public boolean updatePost(long postId, String content, long user_id) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
+            try {
+                int updatedRows = session.createMutationQuery(
+                                "update Post set content = :content where id = :postId and userId = :userId"
+                        )
+                        .setParameter("content", content)
+                        .setParameter("postId", postId)
+                        .setParameter("userId", user_id)
+                        .executeUpdate();
 
-            int updatedRows = session.createMutationQuery(
-                    "update Post set content = :content where id = :postId and userId = :userId"
-                    )
-                    .setParameter("content", content)
-                    .setParameter("postId", postId)
-                    .setParameter("userId", user_id)
-                    .executeUpdate();
+                transaction.commit();
 
-            transaction.commit();
-
-            return updatedRows > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+                return updatedRows > 0;
+            } catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
     public boolean deletePost(long postId, long userId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
+            try {
+                session.createMutationQuery("update Post p set deleted = true where p.id = :postId and p.userId = :userId")
+                        .setParameter("postId", postId)
+                        .setParameter("userId", userId)
+                        .executeUpdate();
 
-            session.createMutationQuery("delete from Post where id = :postId and userId = :userId")
-                    .setParameter("postId", postId)
-                    .setParameter("userId", userId)
-                    .executeUpdate();
-
-            transaction.commit();
-            return true;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+                transaction.commit();
+                return true;
+            } catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 

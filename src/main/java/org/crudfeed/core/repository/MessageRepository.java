@@ -26,7 +26,9 @@ public class MessageRepository {
                 transaction.commit();
                 return true;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return false;
             }
@@ -73,7 +75,9 @@ public class MessageRepository {
 
                 return updatedRows > 0;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return false;
             }
@@ -85,7 +89,11 @@ public class MessageRepository {
             Transaction transaction = session.beginTransaction();
             try {
                 int deletedRows = session.createMutationQuery(
-                                "delete from Message where id = :messageId and senderId = :senderId"
+                                "update Message m " +
+                                        "set m.deleted = true " +
+                                        "where m.id = :messageId and " +
+                                        "m.senderId = :senderId and " +
+                                        "m.deleted = false"
                         )
                         .setParameter("messageId", messageId)
                         .setParameter("senderId", senderId)
@@ -95,7 +103,9 @@ public class MessageRepository {
 
                 return deletedRows > 0;
             } catch (Exception e) {
-                transaction.rollback();
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
                 e.printStackTrace();
                 return false;
             }
