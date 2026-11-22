@@ -79,4 +79,16 @@ public class UserService {
     public long getSubscribersCount(long userId) { return userRepository.getSubscribersCount(userId); }
 
     public long getSubscriptionsCount(long userId) { return userRepository.getSubscriptionsCount(userId); }
+
+    public String modBanAccount(long userId) {
+        return userRepository.modBanAccount(userId)
+                ? "Successfully banned!"
+                : "Something went wrong!";
+    }
+
+    public String modUnbanAccount(long userId) {
+        return userRepository.modUnbanAccount(userId)
+                ? "Successfully unbanned!"
+                : "Something went wrong!";
+    }
 }

@@ -4,5 +4,9 @@ public enum Role {
     USER,
     MODERATOR,
     ADMIN,
-    OWNER
+    OWNER;
+
+    public boolean hasAtLeast(Role required) {
+        return this.ordinal() >= required.ordinal();
+    }
 }
