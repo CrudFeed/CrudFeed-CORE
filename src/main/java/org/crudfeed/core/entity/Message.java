@@ -42,6 +42,10 @@ public class Message {
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean banned = false;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

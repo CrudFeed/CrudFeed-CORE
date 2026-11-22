@@ -13,13 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(
-        name = "posts",
-        indexes = {
-                @Index(name = "idx_posts_user_created", columnList = "user_id, created_at"),
-                @Index(name = "idx_posts_created_at", columnList = "created_at")
-        }
-)
+@Table(name = "posts")
 public class Post {
 
     @Id
@@ -43,6 +37,10 @@ public class Post {
     @Builder.Default
     @Column(nullable = false)
     private boolean deleted = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean banned = false;
 
     @Override
     public boolean equals(Object o) {
