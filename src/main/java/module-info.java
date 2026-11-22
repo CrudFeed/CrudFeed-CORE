@@ -6,6 +6,6 @@ module core {
     requires org.hibernate.orm.core;
     requires spring.security.crypto;
     requires java.naming; requires com.fasterxml.jackson.annotation;
-    requires spring.tx; requires spring.context;
+    requires spring.context;
     requires jdk.jfr;
 }
