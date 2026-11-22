@@ -4,7 +4,6 @@ import org.crudfeed.core.dto.UserResponseDto;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -12,7 +11,7 @@ import java.time.Instant;
 import static org.crudfeed.core.entity.Role.*;
 
 @Service
-@Transactional
+
 public class AuthService {
 
     private final UserRepository userRepository;

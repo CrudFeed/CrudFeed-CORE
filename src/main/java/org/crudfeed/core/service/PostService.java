@@ -3,13 +3,10 @@ package org.crudfeed.core.service;
 import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.repository.PostRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Transactional
 public class PostService {
 
     private final PostRepository postRepository;

@@ -1,6 +1,5 @@
 package org.crudfeed.core.repository;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;

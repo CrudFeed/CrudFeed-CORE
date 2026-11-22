@@ -3,7 +3,6 @@ package org.crudfeed.core.service;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {

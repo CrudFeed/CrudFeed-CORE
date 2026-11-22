@@ -3,12 +3,10 @@ package org.crudfeed.core.service;
 import org.crudfeed.core.entity.Message;
 import org.crudfeed.core.repository.MessageRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@Transactional
 public class MessageService {
 
     private final MessageRepository messageRepository;
