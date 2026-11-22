@@ -38,7 +38,7 @@ public class UserRepository {
 
     public User findByEmail(String email) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM User WHERE email = :email", User.class)
+            return session.createQuery("from User where email = :email", User.class)
                     .setParameter("email", email)
                     .uniqueResult();
         } catch (Exception e) {
@@ -49,7 +49,7 @@ public class UserRepository {
 
     public User findByNickname(String nickname) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM User WHERE nickname = :name", User.class)
+            return session.createQuery("from User where nickname = :name", User.class)
                     .setParameter("name", nickname)
                     .uniqueResult();
         } catch (Exception e) {
@@ -63,7 +63,7 @@ public class UserRepository {
             User subscriber = session.get(User.class, subscriberId);
 
             User userToSubscribe = session.createQuery(
-                            "FROM User WHERE nickname = :nickname", User.class)
+                            "from User where nickname = :nickname", User.class)
                     .setParameter("nickname", nickname).uniqueResult();
 
             if (subscriber == null || userToSubscribe == null) {
@@ -96,7 +96,7 @@ public class UserRepository {
             User subscriber = session.get(User.class, subscriberId);
 
             User userToUnsubscribe = session.createQuery(
-                            "FROM User WHERE nickname = :nickname", User.class)
+                            "from User where nickname = :nickname", User.class)
                     .setParameter("nickname", nickname).uniqueResult();
 
             if (subscriber == null || userToUnsubscribe == null) {
@@ -128,9 +128,9 @@ public class UserRepository {
     public long getSubscribersCount(long userId) {
         try (Session session = sessionFactory.openSession()) {
             return session.createNativeQuery(
-                            "SELECT COUNT(*) FROM user_subscribes WHERE subscribed_user_id = :id",
+                            "select count(*) from user_subscribes where subscribed_user_id = :userId",
                             Long.class)
-                    .setParameter("id", userId)
+                    .setParameter("userId", userId)
                     .getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,7 +141,7 @@ public class UserRepository {
     public long getSubscriptionsCount(long userId) {
         try (Session session = sessionFactory.openSession()) {
             return session.createNativeQuery(
-                            "SELECT COUNT(*) FROM user_subscribes WHERE user_id = :id",
+                            "select count(*) from user_subscribes where user_id = :id",
                             Long.class)
                     .setParameter("id", userId)
                     .getSingleResult();
@@ -154,7 +154,7 @@ public class UserRepository {
     public User viewAccountPage(String nickname) {
         try (Session session = sessionFactory.openSession()) {
             User user = session.createQuery(
-                            "FROM User u WHERE u.nickname = :name",
+                            "from User u where u.nickname = :name",
                             User.class)
                     .setParameter("name", nickname)
                     .uniqueResult();
@@ -193,8 +193,8 @@ public class UserRepository {
     public String getNicknameById(long userId) {
         try (Session session = sessionFactory.openSession()) {
             String nickname = session.createQuery(
-                            "select u.nickname from User u where u.id = :user_id", String.class)
-                    .setParameter("user_id", userId)
+                            "select u.nickname from User u where u.id = :userId", String.class)
+                    .setParameter("userId", userId)
                     .uniqueResult();
 
             return nickname != null ? nickname : "";
@@ -206,7 +206,12 @@ public class UserRepository {
 
     public long getUserId(String nickname) {
         try (Session session = sessionFactory.openSession()) {
-            Long id = session.createQuery("select u.id from User u where u.nickname = :name", Long.class)
+            Long id = session.createQuery(
+                    "select u.id " +
+                            "from User u " +
+                            "where u.nickname = :name",
+                     Long.class
+                    )
                     .setParameter("name", nickname)
                     .uniqueResult();
 
@@ -221,9 +226,13 @@ public class UserRepository {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
-                int updatedRows = session.createMutationQuery("update User set nickname = :nickname where id = :id")
+                int updatedRows = session.createMutationQuery(
+                        "update User " +
+                                "set nickname = :nickname " +
+                                "where id = :userId"
+                        )
                         .setParameter("nickname", nickname)
-                        .setParameter("id", userId)
+                        .setParameter("userId", userId)
                         .executeUpdate();
 
                 transaction.commit();

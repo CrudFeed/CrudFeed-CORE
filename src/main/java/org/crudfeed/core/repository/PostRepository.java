@@ -77,7 +77,7 @@ public class PostRepository {
     public List<Post> viewFeed() {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery(
-                    "FROM Post p WHERE p.deleted = false ORDER BY p.createdAt ASC", Post.class
+                    "from Post p where p.deleted = false order by p.createdAt asc", Post.class
                     ).getResultList();
 
         } catch (Exception e) {

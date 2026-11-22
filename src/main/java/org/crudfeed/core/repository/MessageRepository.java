@@ -35,10 +35,10 @@ public class MessageRepository {
 
     public List<Message> viewMessages(long senderId, long receiverId) {
         String hql = """
-            FROM Message m 
-            WHERE (m.senderId = :sId AND m.receiverId = :rId) 
-               OR (m.senderId = :rId AND m.receiverId = :sId)
-            ORDER BY m.createdAt ASC
+            from Message m 
+            where (m.senderId = :sId and m.receiverId = :rId and m.deleted = false) 
+               or (m.senderId = :rId and m.receiverId = :sId and m.deleted = false)
+            order by m.createdAt asc
             """;
 
         try (Session session = sessionFactory.openSession()) {
@@ -54,17 +54,16 @@ public class MessageRepository {
     }
 
     public boolean editMessage(long messageId, String content, long senderId) {
-        String hql = """
-            update Message
-            set content = :content
-            where id = :messageId
-            and senderId = :senderId
-            """;
-
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
-                int updatedRows = session.createMutationQuery(hql)
+                int updatedRows = session.createMutationQuery(
+                                "update Message m " +
+                                        "set m.content = :content " +
+                                        "where m.id = :messageId " +
+                                        "and m.senderId = :senderId " +
+                                        "and m.deleted = false"
+                        )
                         .setParameter("content", content)
                         .setParameter("messageId", messageId)
                         .setParameter("senderId", senderId)
