@@ -6,7 +6,8 @@ import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
-import java.time.OffsetDateTime;
+
+import java.time.Instant;
 
 import static org.crudfeed.core.entity.Role.*;
 
@@ -36,9 +37,9 @@ public class AuthService {
         user.setPassword(bcryptHash);
         user.setBio("The nullable bio...");
         user.setRole(USER);
-        user.setLastSeen(OffsetDateTime.now());
-        user.setCreatedAt(OffsetDateTime.now());
-        user.setUpdatedAt(OffsetDateTime.now());
+        user.setLastSeen(Instant.now());
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
         user.setBanned(false);
         user.setVerifiedEmail(false);
         user.setDeleted(false);
@@ -57,7 +58,7 @@ public class AuthService {
             throw new RuntimeException("Error: Invalid password!");
         }
 
-        user.setLastSeen(OffsetDateTime.now());
+        user.setLastSeen(Instant.now());
 
         return new UserResponseDto(user.getId(), user.getEmail(), user.getNickname(), user.getDisplayName());
     }
