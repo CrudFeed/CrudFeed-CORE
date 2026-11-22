@@ -1,5 +1,13 @@
 package org.crudfeed.core.dto;
 
+import java.time.Instant;
+
 public record ViewAccountPageRequestDto (
-        String nickname
-) {}
+        long id,
+        String nickname,
+        long subscribers,
+        long subscriptions,
+        String bio,
+        Instant createdAt,
+        Instant lastSeen
+        ) {}

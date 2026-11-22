@@ -1,5 +1,6 @@
 package org.crudfeed.core.repository;
 
+import org.crudfeed.core.dto.ViewAccountPageRequestDto;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -62,25 +63,47 @@ public class UserRepository {
             User subscriber = session.get(User.class, subscriberId);
 
             User userToSubscribe = session.createQuery(
-                            "from User where nickname = :nickname", User.class)
+                            "from User " +
+                                    "where nickname = :nickname",
+                            User.class
+                    )
                     .setParameter("nickname", nickname).uniqueResult();
 
             if (subscriber == null || userToSubscribe == null) {
                 return "User not found!";
             }
 
-            if (subscriber.getId() == userToSubscribe.getId()) {
+            if (subscriber.getId().equals(userToSubscribe.getId())) {
                 return "Cannot subscribe to yourself!";
             }
 
             Transaction transaction = session.beginTransaction();
             try {
-                if (subscriber.getSubscriptions().contains(userToSubscribe)) {
+                Long exists = session.createNativeQuery(
+                                "select count(*) " +
+                                        "from user_subscribes " +
+                                        "where user_id = :userId " +
+                                        "and subscribed_user_id = :targetId",
+                                Long.class
+                        )
+                        .setParameter("userId", subscriber.getId())
+                        .setParameter("targetId", userToSubscribe.getId())
+                        .getSingleResult();
+
+                if (exists != null && exists > 0) {
                     transaction.rollback();
                     return "User is already subscribed!";
                 }
 
-                subscriber.getSubscriptions().add(userToSubscribe);
+                session.createNativeQuery(
+                                "insert into user_subscribes (user_id, subscribed_user_id) " +
+                                        "values (:userId, :targetId)",
+                                Long.class
+                        )
+                        .setParameter("userId", subscriber.getId())
+                        .setParameter("targetId", userToSubscribe.getId())
+                        .executeUpdate();
+
                 transaction.commit();
                 return "User subscribed!";
             } catch (Exception e) {
@@ -97,26 +120,45 @@ public class UserRepository {
         try (Session session = sessionFactory.openSession()) {
             User subscriber = session.get(User.class, subscriberId);
 
-            User userToUnsubscribe = session.createQuery(
-                            "from User where nickname = :nickname", User.class)
+            User userToUnsubscribe = session.createQuery("from User where nickname = :nickname", User.class)
                     .setParameter("nickname", nickname).uniqueResult();
 
             if (subscriber == null || userToUnsubscribe == null) {
                 return "User not found!";
             }
 
-            if (subscriber.getId() == userToUnsubscribe.getId()) {
+            if (subscriber.getId().equals(userToUnsubscribe.getId())) {
                 return "Cannot unsubscribe from yourself!";
             }
 
             Transaction transaction = session.beginTransaction();
             try {
-                if (!subscriber.getSubscriptions().contains(userToUnsubscribe)) {
+                Long exists = session.createNativeQuery(
+                                "select count(*) " +
+                                        "from user_subscribes " +
+                                        "where user_id = :userId " +
+                                        "and subscribed_user_id = :targetId",
+                                Long.class
+                        )
+                        .setParameter("userId", subscriber.getId())
+                        .setParameter("targetId", userToUnsubscribe.getId())
+                        .getSingleResult();
+
+                if (exists == null || exists == 0) {
                     transaction.rollback();
                     return "User is already unsubscribed!";
                 }
 
-                subscriber.getSubscriptions().remove(userToUnsubscribe);
+                session.createNativeQuery(
+                                "delete from user_subscribes " +
+                                        "where user_id = :userId and " +
+                                        "subscribed_user_id = :targetId",
+                                        Long.class
+                        )
+                        .setParameter("userId", subscriber.getId())
+                        .setParameter("targetId", userToUnsubscribe.getId())
+                        .executeUpdate();
+
                 transaction.commit();
                 return "User unsubscribed!";
             } catch (Exception e) {
@@ -138,7 +180,7 @@ public class UserRepository {
                     .getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
-            return 0;
+            return -1;
         }
     }
 
@@ -151,23 +193,34 @@ public class UserRepository {
                     .getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
-            return 0;
+            return -1;
         }
     }
 
-    public User viewAccountPage(String nickname) {
+    public ViewAccountPageRequestDto viewAccountPage(String nickname) {
         try (Session session = sessionFactory.openSession()) {
             User user = session.createQuery(
-                            "from User u where u.nickname = :name",
+                            "from User u where u.nickname = :nickname",
                             User.class)
-                    .setParameter("name", nickname)
+                    .setParameter("nickname", nickname)
                     .uniqueResult();
 
-            if (user != null) {
-                Hibernate.initialize(user.getSubscriptions());
+            if (user == null) {
+                return null;
             }
 
-            return user;
+            long subscribers = getSubscribersCount(user.getId());
+            long subscriptions = getSubscriptionsCount(user.getId());
+
+            return new ViewAccountPageRequestDto(
+                    user.getId(),
+                    user.getNickname(),
+                    subscribers,
+                    subscriptions,
+                    user.getBio(),
+                    user.getCreatedAt(),
+                    user.getLastSeen()
+            );
         } catch (Exception e) {
             e.printStackTrace();
             return null;

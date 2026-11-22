@@ -1,5 +1,6 @@
 package org.crudfeed.core.repository;
 
+import org.crudfeed.core.dto.ViewFeedRequestDto;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -14,9 +15,11 @@ import java.util.List;
 public class PostRepository {
 
     private final SessionFactory sessionFactory;
+    private final UserRepository userRepository;
 
-    public PostRepository() {
+    public PostRepository(UserRepository userRepository) {
         this.sessionFactory = HibernateUtil.getSessionFactory();
+        this.userRepository = userRepository;
     }
 
     public boolean createPost(Post post) {
@@ -82,16 +85,38 @@ public class PostRepository {
         }
     }
 
-    public List<Post> viewFeed() {
+    public List<ViewFeedRequestDto> viewFeed() {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery(
+            List<Post> posts = session.createQuery(
                     "from Post p where p.deleted = false order by p.createdAt asc", Post.class
-                    ).getResultList();
+            ).getResultList();
+
+            return posts.stream()
+                    .map(post -> new ViewFeedRequestDto(
+                            post.getId(),
+                            post.getUserId(),
+                            userRepository.getNicknameById(post.getUserId()),
+                            post.getContent(),
+                            getLikesCount(session, post.getId()),
+                            post.getCreatedAt(),
+                            post.getUpdatedAt()
+                    ))
+                    .toList();
 
         } catch (Exception e) {
             e.printStackTrace();
             return List.of();
         }
+    }
+
+    private long getLikesCount(Session session, long postId) {
+        Long count = session.createNativeQuery(
+                        "select count(*) from user_liked_posts where post_id = :postId",
+                        Long.class
+                )
+                .setParameter("postId", postId)
+                .getSingleResult();
+        return count != null ? count : 0L;
     }
 
 // TODO: REWORK POST REPO

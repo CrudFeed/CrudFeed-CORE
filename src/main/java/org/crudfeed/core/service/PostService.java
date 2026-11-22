@@ -1,5 +1,6 @@
 package org.crudfeed.core.service;
 
+import org.crudfeed.core.dto.ViewFeedRequestDto;
 import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.repository.PostRepository;
 import org.springframework.stereotype.Service;
@@ -58,7 +59,7 @@ public class PostService {
                 : "Could not delete post!";
     }
 
-    public List<Post> viewFeed() { return postRepository.viewFeed(); }
+    public List<ViewFeedRequestDto> viewFeed() { return postRepository.viewFeed(); }
 
 // TODO: REWORK POST SERVICE
 

@@ -1,6 +1,6 @@
 package org.crudfeed.core.service;
 
-import org.crudfeed.core.entity.User;
+import org.crudfeed.core.dto.ViewAccountPageRequestDto;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -23,18 +23,12 @@ public class UserService {
         return userRepository.unsubscribe(subscriberId, name);
     }
 
-    @Transactional
-    public User viewAccountPage(String nickname) {
-        if (nickname == null || nickname.isEmpty()) {
+    public ViewAccountPageRequestDto viewAccountPage(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
             return null;
         }
 
-        User user = userRepository.viewAccountPage(nickname);
-//        if (user != null) {
-//            user.getSubscribers().size();
-//            user.getSubscriptions().size();
-//        }
-        return user;
+        return userRepository.viewAccountPage(nickname);
     }
 
     public String editAccountPage(long userId, String content) {
@@ -63,7 +57,7 @@ public class UserService {
 
     public String deleteAccount(String delete, long userId) {
         if (delete == null) {
-            return "Invalid input! Action canceled.";
+            return "Action canceled!";
         }
         if (delete.equalsIgnoreCase("y") && userRepository.deleteUser(userId)) {
             return "Account successfully deleted!";

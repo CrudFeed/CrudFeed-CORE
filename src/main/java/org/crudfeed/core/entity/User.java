@@ -66,15 +66,6 @@ public class User {
     @Column(nullable = false)
     private boolean deleted = false;
 
-    @Builder.Default
-    @ManyToMany
-    @JoinTable(
-            name = "user_subscribes",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "subscribed_user_id")
-    )
-    private Set<User> subscriptions = new HashSet<>();
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
