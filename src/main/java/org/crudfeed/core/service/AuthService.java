@@ -59,6 +59,6 @@ public class AuthService {
 
         user.setLastSeen(OffsetDateTime.now());
 
-        return new UserResponseDto(user.getId(), user.getEmail(), user.getNickname());
+        return new UserResponseDto(user.getId(), user.getEmail(), user.getNickname(), user.getDisplayName());
     }
 }
