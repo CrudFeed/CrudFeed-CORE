@@ -2,6 +2,8 @@ package org.crudfeed.core.service;
 
 import org.crudfeed.core.dto.GetBannedDtoRequest;
 import org.crudfeed.core.dto.ViewAccountPageRequestDto;
+import org.crudfeed.core.entity.Role;
+import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -78,15 +80,57 @@ public class UserService {
 
     public long getSubscriptionsCount(long userId) { return userRepository.getSubscriptionsCount(userId); }
 
-    public String modBanAccount(long userId) {
-        return userRepository.modBanAccount(userId)
-                ? "Successfully banned!"
-                : "Something went wrong!";
+    public String modBanAccount(long modId, long targetId) {
+        if (modId <= 0 || targetId <= 0) {
+            return "Something went wrong!";
+        }
+
+        if (modId == targetId) {
+            return "We truly understand your wish to ban yourself, " +
+                    "but our strict policies force us to decline. " +
+                    "We are sorry!";
+        }
+
+        User mod = userRepository.findById(modId);
+        User target = userRepository.findById(targetId);
+
+        if (mod == null || target == null) {
+            return "User not found!";
+        }
+
+        if (mod.getRole().hasAtLeast(Role.MODERATOR) && mod.getRole().hasHigherThan(target.getRole())) {
+            return userRepository.modBanAccount(targetId)
+                    ? "Successfully banned!"
+                    : "Something went wrong!";
+        }
+
+        return "Access denied!";
     }
 
-    public String modUnbanAccount(long userId) {
-        return userRepository.modUnbanAccount(userId)
-                ? "Successfully unbanned!"
-                : "Something went wrong!";
+    public String modUnbanAccount(long modId, long targetId) {
+        if (modId <= 0 || targetId <= 0) {
+            return "Something went wrong!";
+        }
+
+        if (modId == targetId) {
+            return "We truly understand your wish to unban yourself, " +
+                    "but our strict policies force us to decline. " +
+                    "We are sorry!";
+        }
+
+        User mod = userRepository.findById(modId);
+        User target = userRepository.findById(targetId);
+
+        if (mod == null || target == null) {
+            return "User not found!";
+        }
+
+        if (mod.getRole().hasAtLeast(Role.MODERATOR) && mod.getRole().hasHigherThan(target.getRole())) {
+            return userRepository.modUnbanAccount(targetId)
+                    ? "Successfully banned!"
+                    : "Something went wrong!";
+        }
+
+        return "Access denied!";
     }
 }

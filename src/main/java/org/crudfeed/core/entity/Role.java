@@ -9,4 +9,7 @@ public enum Role {
     public boolean hasAtLeast(Role required) {
         return this.ordinal() >= required.ordinal();
     }
+    public boolean hasHigherThan(Role required) {
+        return this.ordinal() > required.ordinal();
+    }
 }

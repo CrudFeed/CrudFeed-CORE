@@ -39,6 +39,17 @@ public class UserRepository {
         }
     }
 
+    public User findById(long userId) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("from User u " + "where u.id = :userId ", User.class)
+                    .setParameter("userId", userId)
+                    .uniqueResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public User findByEmail(String email) {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("from User u " + "where u.email = :email ", User.class)
@@ -438,7 +449,7 @@ public class UserRepository {
                         .executeUpdate();
 
                 transaction.commit();
-                return bannedUsers > 0;
+                return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -483,7 +494,7 @@ public class UserRepository {
                         .executeUpdate();
 
                 transaction.commit();
-                return unbannedUsers > 0;
+                return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
