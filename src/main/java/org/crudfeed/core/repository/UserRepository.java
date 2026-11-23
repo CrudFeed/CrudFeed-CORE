@@ -41,7 +41,7 @@ public class UserRepository {
 
     public User findByEmail(String email) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("from User where email = :email", User.class)
+            return session.createQuery("from User u " + "where u.email = :email ", User.class)
                     .setParameter("email", email)
                     .uniqueResult();
         } catch (Exception e) {
@@ -52,7 +52,7 @@ public class UserRepository {
 
     public User findByNickname(String nickname) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("from User where nickname = :name", User.class)
+            return session.createQuery("from User u where u.nickname = :name", User.class)
                     .setParameter("name", nickname)
                     .uniqueResult();
         } catch (Exception e) {
@@ -101,11 +101,7 @@ public class UserRepository {
         try (Session session = sessionFactory.openSession()) {
             User subscriber = session.get(User.class, subscriberId);
 
-            User userToSubscribe = session.createQuery(
-                            "from User " +
-                                    "where nickname = :nickname",
-                            User.class
-                    )
+            User userToSubscribe = session.createQuery("from User u where u.nickname = :nickname", User.class)
                     .setParameter("nickname", nickname).uniqueResult();
 
             if (subscriber == null || userToSubscribe == null) {

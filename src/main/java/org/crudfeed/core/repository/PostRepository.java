@@ -68,7 +68,12 @@ public class PostRepository {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
-                session.createMutationQuery("update Post p set deleted = true where p.id = :postId and p.userId = :userId")
+                session.createMutationQuery(
+                        "update Post p " +
+                                "set deleted = true " +
+                                "where p.id = :postId " +
+                                "and p.userId = :userId"
+                        )
                         .setParameter("postId", postId)
                         .setParameter("userId", userId)
                         .executeUpdate();
@@ -88,7 +93,11 @@ public class PostRepository {
     public List<ViewFeedRequestDto> viewFeed() {
         try (Session session = sessionFactory.openSession()) {
             List<Post> posts = session.createQuery(
-                    "from Post p where p.deleted = false order by p.createdAt asc", Post.class
+                    "from Post p " +
+                            "where p.deleted = false " +
+                            "and banned = false " +
+                            "order by p.createdAt asc",
+                    Post.class
             ).getResultList();
 
             return posts.stream()
