@@ -10,6 +10,8 @@ import org.crudfeed.core.util.HibernateUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
+
 @Repository
 public class UserRepository {
 
@@ -56,6 +58,25 @@ public class UserRepository {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public void updateLastSeen(long userId, Instant lastSeen) {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                session.createMutationQuery("update User set lastSeen = :lastSeen where id = :userId")
+                        .setParameter("lastSeen", lastSeen)
+                        .setParameter("userId", userId)
+                        .executeUpdate();
+
+                transaction.commit();
+            } catch (Exception e) {
+                if (transaction != null && transaction.isActive()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+            }
         }
     }
 
