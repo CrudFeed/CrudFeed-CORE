@@ -39,7 +39,7 @@ public class UserService {
     }
 
     public String editAccountPage(long userId, String content) {
-        if (userId == -1) {
+        if (userId <= 0) {
             return "Something went wrong!";
         }
         boolean isUpdated = userRepository.editAccountPage(userId, content);

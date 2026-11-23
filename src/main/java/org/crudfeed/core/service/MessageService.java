@@ -37,7 +37,7 @@ public class MessageService {
     }
 
     public List<Message> viewMessages(long senderId, long receiverId) {
-        if (receiverId == -1) {
+        if (receiverId <= 0) {
             return List.of();
         }
 
