@@ -4,5 +4,6 @@ public record UserResponseDto(
         long id,
         String email,
         String nickname,
-        String displayName
+        String displayName,
+        org.crudfeed.core.entity.Role role
 ) {}
