@@ -1,5 +1,6 @@
 package org.crudfeed.core.service;
 
+import org.crudfeed.core.dto.GetBannedDtoRequest;
 import org.crudfeed.core.dto.ViewAccountPageRequestDto;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,10 @@ public class UserService {
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public GetBannedDtoRequest getBanned(long userId) {
+        return userRepository.getBanned(userId);
     }
 
     public String getNicknameById(long userId) { return userRepository.getNicknameById(userId); }

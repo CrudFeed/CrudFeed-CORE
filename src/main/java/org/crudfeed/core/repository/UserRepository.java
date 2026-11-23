@@ -1,5 +1,6 @@
 package org.crudfeed.core.repository;
 
+import org.crudfeed.core.dto.GetBannedDtoRequest;
 import org.crudfeed.core.dto.ViewAccountPageRequestDto;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -52,6 +53,23 @@ public class UserRepository {
             return session.createQuery("from User where nickname = :name", User.class)
                     .setParameter("name", nickname)
                     .uniqueResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public GetBannedDtoRequest getBanned(long userId) {
+        try (Session session = sessionFactory.openSession()) {
+            boolean banned = session.createQuery(
+                    "select u.banned " +
+                            "from User u " +
+                            "where u.id = :userId",
+                            Boolean.class
+                    )
+                    .setParameter("userId", userId)
+                    .uniqueResult();
+            return new GetBannedDtoRequest(userId, banned);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
