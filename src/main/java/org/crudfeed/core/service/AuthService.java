@@ -24,10 +24,23 @@ public class AuthService {
     }
 
     public AuthResultResponseDto signUp(String email, String nickname, String displayName, String incomingHash) {
+        if (nickname == null || nickname.isBlank() || displayName == null || displayName.isBlank()) {
+            return new AuthResultResponseDto(false, "Nickname or display name cannot be empty!", null);
+        }
+
+        if (nickname.length() > 24) {
+            return new AuthResultResponseDto(false, "Nickname too long! Max: 24 characters", null);
+        }
+
+        if (displayName != null && displayName.length() > 64) {
+            return new AuthResultResponseDto(false, "Display name too long! Max: 64 characters", null);
+        }
+
         if (userRepository.findByNickname(nickname) != null || userRepository.findByEmail(email) != null) {
             return new AuthResultResponseDto(false, "User with this email or nickname already exists!", null);
         }
 
+        Instant now = Instant.now();
         String bcryptHash = encoder.encode(incomingHash);
 
         User user = new User();
@@ -37,9 +50,9 @@ public class AuthService {
         user.setPassword(bcryptHash);
         user.setBio("The nullable bio...");
         user.setRole(USER);
-        user.setLastSeen(Instant.now());
-        user.setCreatedAt(Instant.now());
-        user.setUpdatedAt(Instant.now());
+        user.setLastSeen(now);
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
         user.setBanned(false);
         user.setVerifiedEmail(false);
         user.setDeleted(false);
