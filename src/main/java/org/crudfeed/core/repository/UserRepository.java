@@ -1,6 +1,7 @@
 package org.crudfeed.core.repository;
 
 import org.crudfeed.core.dto.GetBannedRequestDto;
+import org.crudfeed.core.dto.ShowFriendsListRequestDto;
 import org.crudfeed.core.dto.ViewAccountPageRequestDto;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -11,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public class UserRepository {
@@ -215,6 +218,113 @@ public class UserRepository {
                 return "Something went wrong!";
             }
         }
+    }
+
+    public boolean addFriend(long userId, long friendId) {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                int addedFriends = session.createNativeQuery(
+                                "insert into user_friends(user_id, friend_id) " +
+                                        "values (:userId, :friendId)",
+                                Integer.class
+                        )
+                        .setParameter("userId", userId)
+                        .setParameter("friendId", friendId)
+                        .executeUpdate();
+
+                if (addedFriends <= 0) {
+                    transaction.rollback();
+                    return false;
+                }
+
+                transaction.commit();
+                return true;
+            }  catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean removeFriend(long userId, long friendId) {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                int deletedFriends = session.createNativeQuery(
+                                "delete from user_friends " +
+                                        "where user_id = :userId " +
+                                        "and friend_id = :friendId",
+                                Integer.class
+                        )
+                        .setParameter("userId", userId)
+                        .setParameter("friendId", friendId)
+                        .executeUpdate();
+
+                if (deletedFriends <= 0) {
+                    transaction.rollback();
+                    return false;
+                }
+
+                transaction.commit();
+                return true;
+            }  catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    private List<Long> findFriendsId(long userId) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createNativeQuery(
+                            "select friend_id from user_friends where user_id = :userId",
+                            Long.class
+                    )
+                    .setParameter("userId", userId)
+                    .getResultList();
+        }
+    }
+
+    private List<User> findFriendNamesById(List<Long> friendsId) {
+        if (friendsId == null || friendsId.isEmpty()) {
+            return List.of();
+        }
+
+        try (Session session = sessionFactory.openSession()) {
+            return session.createNativeQuery(
+                            "select u.* " +
+                                    "from users u " +
+                                    "where u.id in (:friendsId) " +
+                                    "and u.banned = false " +
+                                    "and u.deleted = false",
+                            User.class
+                    )
+                    .setParameterList("friendsId", friendsId)
+                    .getResultList();
+        }
+    }
+
+    public List<ShowFriendsListRequestDto> showFriendsList(long userId) {
+        List<Long> friendIds = findFriendsId(userId);
+        if (friendIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<User> friends = findFriendNamesById(friendIds);
+
+        List<ShowFriendsListRequestDto> result = new ArrayList<>();
+        for (User friend : friends) {
+            result.add(new ShowFriendsListRequestDto(userId, friend.getId(), friend.getNickname()));
+        }
+
+        return result;
     }
 
     public long getSubscribersCount(long userId) {

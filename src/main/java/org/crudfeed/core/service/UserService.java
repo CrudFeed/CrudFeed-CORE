@@ -1,8 +1,11 @@
 package org.crudfeed.core.service;
 
 import org.crudfeed.core.dto.*;
+import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -25,6 +28,54 @@ public class UserService {
 
     public String unsubscribe(long subscriberId, String name) {
         return userRepository.unsubscribe(subscriberId, name);
+    }
+
+    public String addOrRemoveFriend(long userId, String friendName, String action) {
+        if (userId <= 0 || friendName == null || friendName.isBlank()) {
+            return "Error: Invalid user id or friend name.";
+        }
+
+        if (action == null) {
+            return "Error: Invalid action.";
+        }
+
+        String actionLowerCase = action.toLowerCase();
+        if (!actionLowerCase.equals("add") && !actionLowerCase.equals("remove")) {
+            return "Error: Invalid action.";
+        }
+
+        User friend = userRepository.findByNickname(friendName);
+        if (friend == null) {
+            return "User not found!";
+        }
+
+        boolean isAdd = actionLowerCase.equals("add");
+
+        if (userId == friend.getId()) {
+            return isAdd
+                    ? "You can not add yourself to friends!"
+                    : "You can not remove yourself from friends!";
+        }
+
+        boolean success = isAdd
+                ? userRepository.addFriend(userId, friend.getId())
+                : userRepository.removeFriend(userId, friend.getId());
+
+        if (!success) {
+            return "Something went wrong!";
+        }
+
+        return isAdd
+                ? "Successfully added!"
+                : "Successfully removed!";
+    }
+
+    public List<ShowFriendsListRequestDto> showFriendsList(long userId) {
+        if (userId <= 0) {
+            return List.of();
+        }
+
+        return userRepository.showFriendsList(userId);
     }
 
     public ViewAccountPageRequestDto viewAccountPage(String nickname) {
