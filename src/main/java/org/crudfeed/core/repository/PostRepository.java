@@ -128,6 +128,17 @@ public class PostRepository {
         return count != null ? count : 0L;
     }
 
+    public Post findById(long postId) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("from Post p " + "where p.id = :postId ", Post.class)
+                    .setParameter("postId", postId)
+                    .uniqueResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 // TODO: REWORK POST REPO
 
 //    public List<Post> showUserPostsById(long userId) {
