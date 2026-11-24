@@ -59,11 +59,11 @@ public class UserService {
         return isChanged ? "Password successfully updated!" : "Failed to update password.";
     }
 
-    public String deleteAccount(String delete, long userId) {
+    public String deleteAccount(String delete, long userId, String email, String nickname) {
         if (delete == null) {
             return "Action canceled!";
         }
-        if (delete.equalsIgnoreCase("y") && userRepository.deleteUser(userId)) {
+        if (delete.equalsIgnoreCase("y") && userRepository.deleteUser(userId, email, nickname)) {
             return "Account successfully deleted!";
         } else if (delete.equalsIgnoreCase("n")) {
             return "Canceled!";

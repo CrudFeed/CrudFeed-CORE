@@ -377,7 +377,7 @@ public class UserRepository {
         }
     }
 
-    public boolean deleteUser(long userId) {
+    public boolean deleteUser(long userId, String email, String nickname) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
@@ -396,10 +396,14 @@ public class UserRepository {
 
                 int deletedUsers = session.createMutationQuery(
                         "update User u " +
-                                "set deleted = true " +
+                                "set u.deleted = true, " +
+                                "u.email = :email, " +
+                                "u.nickname = :nickname " +
                                 "where u.id = :userId"
                         )
-                        .setParameter("id", userId)
+                        .setParameter("userId", userId)
+                        .setParameter("email", "deleted_" + userId + email)
+                        .setParameter("nickname", "deleted_" + userId + nickname)
                         .executeUpdate();
 
                 transaction.commit();
