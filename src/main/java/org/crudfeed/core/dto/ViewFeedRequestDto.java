@@ -8,6 +8,7 @@ public record ViewFeedRequestDto(
         String authorName,
         String content,
         long likes,
+        long dislikes,
         Instant createdAt,
         Instant updatedAt
 ) {}

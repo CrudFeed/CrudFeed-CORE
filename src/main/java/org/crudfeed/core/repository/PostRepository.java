@@ -107,6 +107,7 @@ public class PostRepository {
                             userRepository.getNicknameById(post.getUserId()),
                             post.getContent(),
                             getLikesCount(session, post.getId()),
+                            getDislikesCount(session, post.getId()),
                             post.getCreatedAt(),
                             post.getUpdatedAt()
                     ))
@@ -121,6 +122,16 @@ public class PostRepository {
     private long getLikesCount(Session session, long postId) {
         Long count = session.createNativeQuery(
                         "select count(*) from user_liked_posts where post_id = :postId",
+                        Long.class
+                )
+                .setParameter("postId", postId)
+                .getSingleResult();
+        return count != null ? count : 0L;
+    }
+
+    private long getDislikesCount(Session session, long postId) {
+        Long count = session.createNativeQuery(
+                        "select count(*) from user_disliked_posts where post_id = :postId",
                         Long.class
                 )
                 .setParameter("postId", postId)
