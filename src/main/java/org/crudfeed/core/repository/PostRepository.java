@@ -8,6 +8,7 @@ import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.util.HibernateUtil;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -27,6 +28,7 @@ public class PostRepository {
             try {
                 session.persist(post);
                 transaction.commit();
+                userRepository.updateLastSeen(post.getUserId(), Instant.now());
                 return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
@@ -38,7 +40,7 @@ public class PostRepository {
         }
     }
 
-    public boolean updatePost(long postId, String content, long user_id) {
+    public boolean updatePost(long postId, String content, long userId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
@@ -47,12 +49,17 @@ public class PostRepository {
                         )
                         .setParameter("content", content)
                         .setParameter("postId", postId)
-                        .setParameter("userId", user_id)
+                        .setParameter("userId", userId)
                         .executeUpdate();
 
                 transaction.commit();
 
-                return updatedRows > 0;
+                if (updatedRows > 0) {
+                    userRepository.updateLastSeen(userId, Instant.now());
+                    return true;
+                }
+
+                return false;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -67,7 +74,7 @@ public class PostRepository {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
-                session.createMutationQuery(
+                int deletedPosts = session.createMutationQuery(
                         "update Post p " +
                                 "set deleted = true " +
                                 "where p.id = :postId " +
@@ -78,7 +85,13 @@ public class PostRepository {
                         .executeUpdate();
 
                 transaction.commit();
-                return true;
+
+                if (deletedPosts > 0) {
+                    userRepository.updateLastSeen(userId, Instant.now());
+                    return true;
+                }
+
+                return false;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -297,10 +310,15 @@ public class PostRepository {
                         .setParameter("postId", postId)
                         .executeUpdate();
 
+
                 transaction.commit();
-                return deletedDislikes > 0
-                        ? "Post liked and dislike removed!"
-                        : "Post liked!";
+                userRepository.updateLastSeen(userId, Instant.now());
+
+                if (deletedDislikes <= 0) {
+                    return "Post liked!";
+                }
+
+                return "Post liked and dislike removed!";
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -344,9 +362,13 @@ public class PostRepository {
                         .executeUpdate();
 
                 transaction.commit();
-                return deletedLikes > 0
-                        ? "Post disliked and like removed!"
-                        : "Post disliked!";
+                userRepository.updateLastSeen(userId, Instant.now());
+
+                if (deletedLikes <= 0) {
+                    return "Post disliked!";
+                }
+
+                return "Post disliked and like removed!";
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();

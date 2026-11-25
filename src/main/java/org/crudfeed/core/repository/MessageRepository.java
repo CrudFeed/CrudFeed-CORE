@@ -7,15 +7,18 @@ import org.crudfeed.core.util.HibernateUtil;
 import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
 public class MessageRepository {
 
     private final SessionFactory sessionFactory;
+    private final UserRepository userRepository;
 
-    public MessageRepository() {
+    public MessageRepository(UserRepository userRepository) {
         this.sessionFactory = HibernateUtil.getSessionFactory();
+        this.userRepository = userRepository;
     }
 
     public boolean writeMessage(Message message) {
@@ -40,6 +43,7 @@ public class MessageRepository {
 
                 session.persist(message);
                 transaction.commit();
+                userRepository.updateLastSeen(message.getSenderId(), Instant.now());
                 return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
@@ -89,7 +93,12 @@ public class MessageRepository {
 
                 transaction.commit();
 
-                return updatedRows > 0;
+                if (updatedRows > 0) {
+                    userRepository.updateLastSeen(senderId, Instant.now());
+                    return true;
+                }
+
+                return false;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -117,7 +126,12 @@ public class MessageRepository {
 
                 transaction.commit();
 
-                return deletedRows > 0;
+                if (deletedRows > 0) {
+                    userRepository.updateLastSeen(senderId, Instant.now());
+                    return true;
+                }
+
+                return false;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();

@@ -158,6 +158,7 @@ public class UserRepository {
                         .executeUpdate();
 
                 transaction.commit();
+                updateLastSeen(subscriberId, Instant.now());
                 return "User subscribed!";
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
@@ -213,6 +214,7 @@ public class UserRepository {
                         .executeUpdate();
 
                 transaction.commit();
+                updateLastSeen(subscriberId, Instant.now());
                 return "User unsubscribed!";
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
@@ -265,6 +267,7 @@ public class UserRepository {
                 }
 
                 transaction.commit();
+                updateLastSeen(userId, Instant.now());
                 return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
@@ -302,6 +305,7 @@ public class UserRepository {
                 }
 
                 transaction.commit();
+                updateLastSeen(userId, Instant.now());
                 return true;
             }  catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
@@ -465,9 +469,14 @@ public class UserRepository {
                         .setParameter("userId", userId)
                         .executeUpdate();
 
-                transaction.commit();
+                if (updatedRows <= 0) {
+                    transaction.rollback();
+                    return false;
+                }
 
-                return updatedRows > 0;
+                transaction.commit();
+                updateLastSeen(userId, Instant.now());
+                return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -524,8 +533,14 @@ public class UserRepository {
                         .setParameter("userId", userId)
                         .executeUpdate();
 
+                if (updatedRows <= 0) {
+                    transaction.rollback();
+                    return false;
+                }
+
                 transaction.commit();
-                return updatedRows > 0;
+                updateLastSeen(userId, Instant.now());
+                return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -553,8 +568,14 @@ public class UserRepository {
                         .setParameter("userId", userId)
                         .executeUpdate();
 
+                if (updatedRows <= 0) {
+                    transaction.rollback();
+                    return false;
+                }
+
                 transaction.commit();
-                return updatedRows > 0;
+                updateLastSeen(userId, Instant.now());
+                return true;
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
@@ -577,6 +598,7 @@ public class UserRepository {
                     user.setUpdatedAt(instant);
 
                     transaction.commit();
+                    updateLastSeen(userId, Instant.now());
                     return true;
                 }
 
