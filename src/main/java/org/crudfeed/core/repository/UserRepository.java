@@ -1,6 +1,9 @@
 package org.crudfeed.core.repository;
 
-import org.crudfeed.core.dto.*;
+import org.crudfeed.core.dto.account.GetBannedRequestDto;
+import org.crudfeed.core.dto.account.ShowFriendsListRequestDto;
+import org.crudfeed.core.dto.account.ViewAccountPageRequestDto;
+import org.crudfeed.core.model.FriendFlags;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;

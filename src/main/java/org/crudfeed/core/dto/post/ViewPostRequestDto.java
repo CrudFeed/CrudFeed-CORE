@@ -1,4 +1,4 @@
-package org.crudfeed.core.dto;
+package org.crudfeed.core.dto.post;
 
 import java.time.Instant;
 

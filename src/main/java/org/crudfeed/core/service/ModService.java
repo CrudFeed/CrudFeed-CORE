@@ -1,8 +1,8 @@
 package org.crudfeed.core.service;
 
-import org.crudfeed.core.dto.ModActionRoleResultResponseDto;
-import org.crudfeed.core.dto.ModRoleInfoResponseDto;
-import org.crudfeed.core.dto.ModShowResponseDto;
+import org.crudfeed.core.dto.mod.ModActionRoleResultResponseDto;
+import org.crudfeed.core.dto.mod.ModRoleInfoResponseDto;
+import org.crudfeed.core.dto.mod.ModShowResponseDto;
 import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.entity.Role;
 import org.crudfeed.core.entity.User;

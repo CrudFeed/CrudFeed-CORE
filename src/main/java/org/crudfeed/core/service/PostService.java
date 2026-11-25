@@ -1,6 +1,6 @@
 package org.crudfeed.core.service;
 
-import org.crudfeed.core.dto.ViewPostRequestDto;
+import org.crudfeed.core.dto.post.ViewPostRequestDto;
 import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.repository.PostRepository;
 import org.springframework.stereotype.Service;

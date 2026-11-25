@@ -1,7 +1,7 @@
 package org.crudfeed.core.service;
 
-import org.crudfeed.core.dto.AuthResultResponseDto;
-import org.crudfeed.core.dto.UserResponseDto;
+import org.crudfeed.core.dto.account.AuthResultResponseDto;
+import org.crudfeed.core.dto.account.UserResponseDto;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;

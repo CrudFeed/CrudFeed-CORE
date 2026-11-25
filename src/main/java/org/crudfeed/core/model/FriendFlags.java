@@ -1,4 +1,4 @@
-package org.crudfeed.core.dto;
+package org.crudfeed.core.model;
 
 public record FriendFlags(
         boolean isUserConfirmed,

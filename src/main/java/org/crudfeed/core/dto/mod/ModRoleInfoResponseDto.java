@@ -1,4 +1,4 @@
-package org.crudfeed.core.dto;
+package org.crudfeed.core.dto.mod;
 
 import org.crudfeed.core.entity.Role;
 

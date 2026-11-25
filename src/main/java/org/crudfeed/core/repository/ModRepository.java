@@ -1,7 +1,7 @@
 package org.crudfeed.core.repository;
 
-import org.crudfeed.core.dto.ModRoleInfoResponseDto;
-import org.crudfeed.core.dto.ModShowResponseDto;
+import org.crudfeed.core.dto.mod.ModRoleInfoResponseDto;
+import org.crudfeed.core.dto.mod.ModShowResponseDto;
 import org.crudfeed.core.entity.Role;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.util.HibernateUtil;

@@ -1,6 +1,6 @@
 package org.crudfeed.core.repository;
 
-import org.crudfeed.core.dto.ViewPostRequestDto;
+import org.crudfeed.core.dto.post.ViewPostRequestDto;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;

@@ -1,4 +1,4 @@
-package org.crudfeed.core.dto;
+package org.crudfeed.core.dto.account;
 
 public record ChangeNicknameRequestDto (
         long userId,

@@ -1,4 +1,4 @@
-package org.crudfeed.core.dto;
+package org.crudfeed.core.dto.mod;
 
 public record ModActionRoleResultResponseDto(
         boolean ok,
