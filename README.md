@@ -1,17 +1,11 @@
-<table align="center">
-  <tr>
-    <td align="center">
-      <img width="100" height="100" alt="Image" src="https://github.com/user-attachments/assets/e40a109d-1ff5-488f-a6f1-423762d0e0bc" /><br>
-      <sub><b>CrudFeed Core</b></sub>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img width="120" height="120" alt="CrudFeed" src="https://github.com/user-attachments/assets/e40a109d-1ff5-488f-a6f1-423762d0e0bc">
+</p>
 
-<br>
+<h1 align="center">CrudFeed CORE</h1>
 
 <p align="center">
   Shared domain layer and foundation for all CrudFeed versions.<br>
-  Entities, repositories, and services — the backbone of the ecosystem.
 </p>
 
 <br>
@@ -20,23 +14,16 @@
   <img src="https://img.shields.io/badge/Status-Active_Development-blue?style=for-the-badge&logo=git&logoColor=white" alt="Status">
   <img src="https://img.shields.io/badge/Type-Core_Library-brightgreen?style=for-the-badge&logo=git&logoColor=white" alt="Type">
 </p>
-<p align="center">
-  <sub>🔗 Used by <a href="https://github.com/CrudFeed/CrudFeed-CLI">CLI</a> and <a href="https://github.com/CrudFeed/CrudFeed-WEB">Web</a> versions.</sub>
-</p>
 
 <br>
 
 <p align="center">
-  <font size="7"><b>Powered by</b></font>
-</p>
-
-<p align="center">
-  <img width="40" src="https://img.shields.io/badge/%20-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java">
-  <img width="40" src="https://img.shields.io/badge/%20-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <img width="40" src="https://img.shields.io/badge/%20-59666C?style=flat-square&logo=hibernate&logoColor=white" alt="Hibernate">
-  <img width="40" src="https://img.shields.io/badge/%20-C71A36?style=flat-square&logo=apachemaven&logoColor=white" alt="Maven">
-  <img width="40" src="https://img.shields.io/badge/%20-000000?style=flat-square&logo=intellijidea&logoColor=white" alt="IDEA">
-  <img width="40" src="https://img.shields.io/badge/%20-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux">
+  <img src="https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java">
+  <img src="https://img.shields.io/badge/Hibernate-59666C?style=flat-square&logo=hibernate&logoColor=white" alt="Hibernate">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Maven-C71A36?style=flat-square&logo=apachemaven&logoColor=white" alt="Maven">
+  <img src="https://img.shields.io/badge/IntelliJ_IDEA-000000?style=flat-square&logo=intellijidea&logoColor=white" alt="IntelliJ IDEA">
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux">
 </p>
 
 ---
@@ -45,25 +32,31 @@
 
 The core module provides:
 
-- **Entities** — JPA-mapped domain objects (User, Post, Message, Session) with Lombok
-- **Repositories** — Hibernate-backed data access layer
-- **Services** — Business logic for authentication, users, posts, and messaging
-- **Utilities** — Hibernate configuration and password hashing
+- **Entities & Models** — JPA-mapped entities and domain enums/flags with Lombok
+- **DTOs** — Request and response data transfer objects across account, message, moderation, and post domains
+- **Repositories** — Hibernate-backed data access layer (`Message`, `Mod`, `Post`, `User`)
+- **Services** — Business logic for authentication, messages, moderation, posts, and users
+- **Utilities** — Hibernate session helper (`HibernateUtil`) and password hashing (`PasswordUtil`)
 
 All standardized, no shortcuts. Single source of truth for the domain.
 
 ```
- ┌────────────────────────────────┐
- │            Services            │ ← Business logic (Auth, Users, Posts)
- └───────────────┬────────────────┘
-                 ▼
- ┌────────────────────────────────┐
- │          Repositories          │ ← Hibernate queries & sessions
- └───────────────┬────────────────┘     ▲
-                 ▼                      │
-           ┌────────────┐               │  ┌───────────────┐
-           │ PostgreSQL │               └──┤   Utilities   │ (HibernateUtil, etc.)
-           └────────────┘                  └───────────────┘
+ ┌──────────────────────────────────────────────┐
+ │                   Services                   │ ← Auth, Message, Mod, Post, User
+ └──────────────────────┬───────────────────────┘
+                        ▼
+ ┌──────────────────────────────────────────────┐
+ │                 Repositories                 │ ← Message, Mod, Post, User
+ └──────────────────────┬───────────────────────┘
+                        ▼
+ ┌──────────────────────────────────────────────┐
+ │             Entities / Models / DTOs         │ ← Message, Post, Role, User, FriendFlags
+ └──────────────────────┬───────────────────────┘     ▲
+                        ▼                             │  ┌──────────────────────┐
+                  ┌────────────┐                      └──┤      Utilities       │
+                  │ PostgreSQL │                         │ (HibernateUtil,      │
+                  └────────────┘                         │  PasswordUtil)       │
+                                                         └──────────────────────┘
 ```
 
 ---
@@ -86,7 +79,7 @@ Then in your client's `pom.xml`:
 <dependency>
   <groupId>org.crudfeed</groupId>
   <artifactId>core</artifactId>
-  <version>2.0</version>
+  <version>3.0</version>
 </dependency>
 ```
 
@@ -111,21 +104,22 @@ mvn clean install
 
 ## 🏗️ Module Structure
 ```
-src/main/java/com/crudfeed/
-├── entity/           ← JPA entities
-├── repository/       ← Repositories
-├── service/          ← Business logic
-└── util/             ← Validators, formatters, common helpers
+src/main/java/org/crudfeed/core/
+├── dto/              ← Request & response DTOs (account, message, mod, post)
+├── entity/           ← JPA entities (Message, Post, Role, User)
+├── model/            ← Domain models & flags (FriendFlags)
+├── repository/       ← Data access repositories
+├── service/          ← Business logic services
+└── util/             ← Utilities (HibernateUtil, PasswordUtil)
 ```
 
 ---
 
 ## 💡 Design Principles
 
-- **No Leaks** — Entities never escape the core directly; clients use services
 - **Single Responsibility** — Each layer has one job
 - **Testability** — Repositories are mockable, services are testable
-- **Reusability** — One implementation, multiple consumers (CLI + Web + future versions)
+- **Reusability** — One implementation, multiple consumers
 
 ---
 
@@ -137,4 +131,4 @@ Active development. Used as the foundation for all CrudFeed clients.
 
 ## 📄 License
 
-Same as parent CrudFeed organization.
+This project is licensed under the GNU General Public License v3.0 — see the [LICENSE](LICENSE) file for details.
