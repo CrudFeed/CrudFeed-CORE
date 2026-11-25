@@ -63,27 +63,14 @@ All standardized, no shortcuts. Single source of truth for the domain.
 
 ## 📦 Getting Started
 
-### Add to your project
-
-If you're building a CLI or Web client:
+### 1. Clone `CrudFeed-CORE`
 
 ```bash
 git clone https://github.com/CrudFeed/CrudFeed-CORE.git
 cd CrudFeed-CORE
-mvn clean install
 ```
 
-Then in your client's `pom.xml`:
-
-```xml
-<dependency>
-  <groupId>org.crudfeed</groupId>
-  <artifactId>core</artifactId>
-  <version>3.0</version>
-</dependency>
-```
-
-### Configure Hibernate
+### 2. Configure Hibernate
 
 Update `src/main/resources/hibernate.cfg.xml` with your PostgreSQL credentials:
 
@@ -94,10 +81,20 @@ Update `src/main/resources/hibernate.cfg.xml` with your PostgreSQL credentials:
 <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
 ```
 
-Build and install:
+### 3. Build and install
 
 ```bash
 mvn clean install
+```
+
+### 4. Add dependency to your client or server
+
+```xml
+<dependency>
+  <groupId>org.crudfeed</groupId>
+  <artifactId>core</artifactId>
+  <version>3.0</version>
+</dependency>
 ```
 
 ---
