@@ -1,6 +1,6 @@
 package org.crudfeed.core.service;
 
-import org.crudfeed.core.dto.ViewFeedRequestDto;
+import org.crudfeed.core.dto.ViewPostRequestDto;
 import org.crudfeed.core.entity.Post;
 import org.crudfeed.core.repository.PostRepository;
 import org.springframework.stereotype.Service;
@@ -59,46 +59,52 @@ public class PostService {
                 : "Could not delete post!";
     }
 
-    public List<ViewFeedRequestDto> viewFeed() { return postRepository.viewFeed(); }
+    public List<ViewPostRequestDto> viewFeed() { return postRepository.viewFeed(); }
 
-// TODO: REWORK POST SERVICE
+    public List<ViewPostRequestDto> showUserPostsById(long userId) {
+        if (userId <= 0) {
+            return List.of();
+        }
 
-//
-//    public List<Post> showUserPostsById(long userId) {
-//        if (userId <= 0) {
-//            return List.of();
-//        }
-//
-//        return postRepository.showUserPostsById(userId);
-//    }
-//
-//    public List<Post> showUserLikes(long userId) {
-//        if (userId <= 0) {
-//            return List.of();
-//        }
-//
-//        return postRepository.showUserLikes(userId);
-//    }
-//
-//    public Post searchPostById(long postId) {
-//        if (postId <= 0) {
-//            return (Post) List.of();
-//        }
-//
-//        return postRepository.searchPostById(postId);
-//    }
-//
-//    public List<Post> searchPostByWords(String content) {
-//        if (content == null || content.isBlank()) {
-//            return List.of();
-//        }
-//
-//        if (content.length() > 2000) {
-//            return  List.of();
-//        }
-//
-//        return postRepository.searchPostByWords(content);
-//    }
+        return postRepository.showUserPostsById(userId);
+    }
+
+    public List<ViewPostRequestDto> showUserLikes(long userId) {
+        if (userId <= 0) {
+            return List.of();
+        }
+
+        return postRepository.showUserLikes(userId);
+    }
+
+    public ViewPostRequestDto searchPostById(long postId) {
+        if (postId <= 0) {
+            return new ViewPostRequestDto(
+                    0,
+                    0,
+                    "",
+                    "",
+                    0,
+                    0,
+                    null,
+                    null
+            );
+        }
+
+        return postRepository.searchPostById(postId);
+    }
+
+    public List<ViewPostRequestDto> searchPostByWords(String content) {
+        if (content == null || content.isBlank()) {
+            return List.of();
+        }
+
+        if (content.length() > 2000) {
+            return List.of();
+        }
+
+        return postRepository.searchPostByWords(content);
+    }
 
     public String likePost(long postId, long userId) {
         return postRepository.likePost(postId, userId);

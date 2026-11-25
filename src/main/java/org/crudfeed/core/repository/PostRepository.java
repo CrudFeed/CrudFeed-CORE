@@ -1,11 +1,10 @@
 package org.crudfeed.core.repository;
 
-import org.crudfeed.core.dto.ViewFeedRequestDto;
+import org.crudfeed.core.dto.ViewPostRequestDto;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.crudfeed.core.entity.Post;
-import org.crudfeed.core.entity.User;
 import org.crudfeed.core.util.HibernateUtil;
 import org.springframework.stereotype.Repository;
 
@@ -90,7 +89,7 @@ public class PostRepository {
         }
     }
 
-    public List<ViewFeedRequestDto> viewFeed() {
+    public List<ViewPostRequestDto> viewFeed() {
         try (Session session = sessionFactory.openSession()) {
             List<Post> posts = session.createQuery(
                     "from Post p " +
@@ -101,7 +100,7 @@ public class PostRepository {
             ).getResultList();
 
             return posts.stream()
-                    .map(post -> new ViewFeedRequestDto(
+                    .map(post -> new ViewPostRequestDto(
                             post.getId(),
                             post.getUserId(),
                             userRepository.getNicknameById(post.getUserId()),
@@ -150,73 +149,121 @@ public class PostRepository {
         }
     }
 
-// TODO: REWORK POST REPO
+    public List<ViewPostRequestDto> showUserPostsById(long userId) {
+        try (Session session = sessionFactory.openSession()) {
+            List<Post> posts = session.createQuery(
+                    "from Post p " +
+                            "where p.userId = :userId",
+                            Post.class)
+                    .setParameter("userId", userId)
+                    .getResultList();
 
-//    public List<Post> showUserPostsById(long userId) {
-//        try (Session session = sessionFactory.openSession()) {
-//            return session.createQuery(
-//                            "SELECT p\n" +
-//                                    "FROM Post p\n" +
-//                                    "JOIN p.likedByUsers u\n" +
-//                                    "WHERE u.id = :userId",
-//                            Post.class)
-//                    .setParameter("userId", userId)
-//                    .getResultList();
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return List.of();
-//        }
-//    }
-//
-//    public List<Post> showUserLikes(long userId) {
-//        try (Session session = sessionFactory.openSession()) {
-//            return session.createQuery(
-//                            "SELECT p FROM Post p " +
-//                                    "JOIN FETCH p.user " +
-//                                    "WHERE p.user.id = :userId",
-//                            Post.class)
-//                    .setParameter("userId", userId)
-//                    .getResultList();
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return List.of();
-//        }
-//    }
-//
-//    public Post searchPostById(long id) {
-//        try (Session session = sessionFactory.openSession()) {
-//            return session.createQuery(
-//                            "SELECT p FROM Post p " +
-//                                    "JOIN FETCH p.user " +
-//                                    "WHERE p.id = :id",
-//                            Post.class)
-//                    .setParameter("id", id)
-//                    .uniqueResult();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
-//
-//    public List<Post> searchPostByWords(String keyword) {
-//        try (Session session = sessionFactory.openSession()) {
-//            return session.createQuery(
-//                            "FROM Post p " +
-//                                    "JOIN FETCH p.user " +
-//                                    "WHERE lower(p.text) " +
-//                                    "LIKE lower(:word) " +
-//                                    "ORDER BY p.createdAt ASC",
-//                            Post.class)
-//
-//                    .setParameter("word", "%" + keyword + "%")
-//                    .getResultList();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return List.of();
-//        }
-//    }
+            return posts.stream()
+                    .map(p -> new ViewPostRequestDto(
+                            p.getId(),
+                            p.getUserId(),
+                            userRepository.getNicknameById(p.getUserId()),
+                            p.getContent(),
+                            getLikesCount(session, p.getId()),
+                            getDislikesCount(session, p.getId()),
+                            p.getCreatedAt(),
+                            p.getUpdatedAt()
+                    ))
+                    .toList();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public List<ViewPostRequestDto> showUserLikes(long userId) {
+        try (Session session = sessionFactory.openSession()) {
+            List<Post> posts = session.createNativeQuery(
+                    "select user_id from user_liked_posts " +
+                            "where user_id = :userId",
+                    Post.class
+                    )
+                    .setParameter("userId", userId)
+                    .getResultList();
+
+            return posts.stream()
+                    .map(p -> new ViewPostRequestDto(
+                            p.getId(),
+                            p.getUserId(),
+                            userRepository.getNicknameById(p.getUserId()),
+                            p.getContent(),
+                            getLikesCount(session, p.getId()),
+                            getDislikesCount(session, p.getId()),
+                            p.getCreatedAt(),
+                            p.getUpdatedAt()
+                    ))
+                    .toList();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public ViewPostRequestDto searchPostById(long postId) {
+        try (Session session = sessionFactory.openSession()) {
+            Post post = session.createQuery(
+                    "from Post p where p.id = :postId",
+                            Post.class)
+                    .setParameter("postId", postId)
+                    .uniqueResult();
+
+            if (post == null) {
+                return null;
+            }
+
+            return new ViewPostRequestDto(
+                    post.getId(),
+                    post.getUserId(),
+                    userRepository.getNicknameById(post.getUserId()),
+                    post.getContent(),
+                    getLikesCount(session, post.getId()),
+                    getDislikesCount(session, post.getId()),
+                    post.getCreatedAt(),
+                    post.getUpdatedAt()
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<ViewPostRequestDto> searchPostByWords(String keyword) {
+        try (Session session = sessionFactory.openSession()) {
+            List<Post> posts = session.createQuery(
+                            "from Post p " +
+                                    "where banned = false and lower(p.content) " +
+                                    "like lower(:word) " +
+                                    "order by p.createdAt asc",
+                            Post.class)
+
+                    .setParameter("word", "%" + keyword + "%")
+                    .getResultList();
+
+            return posts.stream()
+                    .map(p -> new ViewPostRequestDto(
+                            p.getId(),
+                            p.getUserId(),
+                            userRepository.getNicknameById(p.getUserId()),
+                            p.getContent(),
+                            getLikesCount(session, p.getId()),
+                            getDislikesCount(session, p.getId()),
+                            p.getCreatedAt(),
+                            p.getUpdatedAt()
+
+                    ))
+                    .toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
 
     public String likePost(long postId, long userId) {
         try (Session session = sessionFactory.openSession()) {

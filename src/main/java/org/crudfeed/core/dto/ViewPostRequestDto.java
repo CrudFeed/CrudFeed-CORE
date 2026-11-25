@@ -2,7 +2,7 @@ package org.crudfeed.core.dto;
 
 import java.time.Instant;
 
-public record ViewFeedRequestDto(
+public record ViewPostRequestDto(
         long id,
         long authorId,
         String authorName,
