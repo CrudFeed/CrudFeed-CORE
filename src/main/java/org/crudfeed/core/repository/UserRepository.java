@@ -9,6 +9,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.util.HibernateUtil;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
@@ -515,6 +516,34 @@ public class UserRepository {
                                 "where id = :userId"
                         )
                         .setParameter("nickname", nickname)
+                        .setParameter("userId", userId)
+                        .executeUpdate();
+
+                transaction.commit();
+                return updatedRows > 0;
+            } catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                if (e instanceof ConstraintViolationException || e.getCause() instanceof ConstraintViolationException) {
+                    return false;
+                }
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean newDisplayName(String displayName, long userId) {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                int updatedRows = session.createMutationQuery(
+                                "update User " +
+                                        "set displayName = :displayName " +
+                                        "where id = :userId "
+                        )
+                        .setParameter("displayName", displayName)
                         .setParameter("userId", userId)
                         .executeUpdate();
 

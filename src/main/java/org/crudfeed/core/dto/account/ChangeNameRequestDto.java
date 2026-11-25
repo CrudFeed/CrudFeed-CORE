@@ -1,5 +1,5 @@
 package org.crudfeed.core.dto.account;
 
-public record ChangeNicknameRequestDto (
+public record ChangeNameRequestDto(
         String nickname
 ) {}

@@ -104,6 +104,14 @@ public class UserService {
         return isChanged ? "Name successfully updated!" : "Failed to update name.";
     }
 
+    public String changeDisplayName(String newName, long userId) {
+        if (newName == null || newName.isBlank()) {
+            return "Display name cannot be empty!";
+        }
+        boolean isChanged = userRepository.newName(newName, userId);
+        return isChanged ? "Display name successfully updated!" : "Failed to update display name.";
+    }
+
     public String changePass(String newPass, long userId) {
         if (newPass == null || newPass.isBlank()) {
             return "Password cannot be empty!";
