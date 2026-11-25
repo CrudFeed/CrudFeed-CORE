@@ -7,6 +7,7 @@ import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -92,7 +93,8 @@ public class UserService {
         if (userId <= 0) {
             return "Something went wrong!";
         }
-        boolean isUpdated = userRepository.editAccountPage(userId, content);
+
+        boolean isUpdated = userRepository.editAccountPage(userId, content, Instant.now());
         return isUpdated ? "Profile bio successfully updated!" : "Failed to update bio!";
     }
 
@@ -100,7 +102,8 @@ public class UserService {
         if (newName == null || newName.isBlank()) {
             return "Name cannot be empty!";
         }
-        boolean isChanged = userRepository.newName(newName, userId);
+
+        boolean isChanged = userRepository.newName(newName, userId, Instant.now());
         return isChanged ? "Name successfully updated!" : "Failed to update name.";
     }
 
@@ -108,7 +111,8 @@ public class UserService {
         if (newName == null || newName.isBlank()) {
             return "Display name cannot be empty!";
         }
-        boolean isChanged = userRepository.newName(newName, userId);
+
+        boolean isChanged = userRepository.newDisplayName(newName, userId, Instant.now());
         return isChanged ? "Display name successfully updated!" : "Failed to update display name.";
     }
 
@@ -116,7 +120,8 @@ public class UserService {
         if (newPass == null || newPass.isBlank()) {
             return "Password cannot be empty!";
         }
-        boolean isChanged = userRepository.newPass(newPass, userId);
+
+        boolean isChanged = userRepository.newPass(newPass, userId, Instant.now());
         return isChanged ? "Password successfully updated!" : "Failed to update password.";
     }
 
@@ -124,11 +129,14 @@ public class UserService {
         if (delete == null) {
             return "Action canceled!";
         }
-        if (delete.equalsIgnoreCase("y") && userRepository.deleteUser(userId, email, nickname)) {
+
+        if (delete.equalsIgnoreCase("y") && userRepository.deleteUser(userId, email, nickname, Instant.now())) {
             return "Account successfully deleted!";
+
         } else if (delete.equalsIgnoreCase("n")) {
             return "Canceled!";
         }
+
         return "Invalid input! Action canceled.";
     }
 

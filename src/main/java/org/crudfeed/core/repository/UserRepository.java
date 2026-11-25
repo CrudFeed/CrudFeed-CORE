@@ -452,12 +452,16 @@ public class UserRepository {
         }
     }
 
-    public boolean editAccountPage(long userId, String bio) {
+    public boolean editAccountPage(long userId, String bio, Instant instant) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
-                int updatedRows = session.createMutationQuery("update User set bio = :userBio where id = :userId")
+                int updatedRows = session.createMutationQuery(
+                        "update User " +
+                                "set bio = :userBio, updatedAt = :instant " +
+                                "where id = :userId")
                         .setParameter("userBio", bio)
+                        .setParameter("instant", instant)
                         .setParameter("userId", userId)
                         .executeUpdate();
 
@@ -506,16 +510,17 @@ public class UserRepository {
         }
     }
 
-    public boolean newName(String nickname, long userId) {
+    public boolean newName(String nickname, long userId, Instant instant) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
                 int updatedRows = session.createMutationQuery(
                         "update User " +
-                                "set nickname = :nickname " +
+                                "set nickname = :nickname, updatedAt = :instant " +
                                 "where id = :userId"
                         )
                         .setParameter("nickname", nickname)
+                        .setParameter("instant", instant)
                         .setParameter("userId", userId)
                         .executeUpdate();
 
@@ -534,16 +539,17 @@ public class UserRepository {
         }
     }
 
-    public boolean newDisplayName(String displayName, long userId) {
+    public boolean newDisplayName(String displayName, long userId, Instant instant) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
                 int updatedRows = session.createMutationQuery(
                                 "update User " +
-                                        "set displayName = :displayName " +
+                                        "set displayName = :displayName, updatedAt = :instant " +
                                         "where id = :userId "
                         )
                         .setParameter("displayName", displayName)
+                        .setParameter("instant", instant)
                         .setParameter("userId", userId)
                         .executeUpdate();
 
@@ -559,7 +565,7 @@ public class UserRepository {
         }
     }
 
-    public boolean newPass(String incomingHash, long userId) {
+    public boolean newPass(String incomingHash, long userId, Instant instant) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
@@ -568,6 +574,7 @@ public class UserRepository {
                 if (user != null) {
                     String bcryptHash = encoder.encode(incomingHash);
                     user.setPassword(bcryptHash);
+                    user.setUpdatedAt(instant);
 
                     transaction.commit();
                     return true;
@@ -584,7 +591,7 @@ public class UserRepository {
         }
     }
 
-    public boolean deleteUser(long userId, String email, String nickname) {
+    public boolean deleteUser(long userId, String email, String nickname, Instant instant) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             try {
@@ -605,12 +612,14 @@ public class UserRepository {
                         "update User u " +
                                 "set u.deleted = true, " +
                                 "u.email = :email, " +
-                                "u.nickname = :nickname " +
+                                "u.nickname = :nickname, " +
+                                "u.updatedAt = :instant " +
                                 "where u.id = :userId"
                         )
                         .setParameter("userId", userId)
                         .setParameter("email", "deleted_" + userId + email)
                         .setParameter("nickname", "deleted_" + userId + nickname)
+                        .setParameter("instant", instant)
                         .executeUpdate();
 
                 transaction.commit();
