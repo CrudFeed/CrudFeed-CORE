@@ -98,6 +98,15 @@ public class UserService {
         return isUpdated ? "Profile bio successfully updated!" : "Failed to update bio!";
     }
 
+    public String changeEmail(String newEmail, long userId) {
+        if (newEmail == null || newEmail.isBlank()) {
+            return "Email cannot be empty!";
+        }
+
+        boolean isChanged = userRepository.newEmail(newEmail, userId, Instant.now());
+        return isChanged ? "Email successfully updated!" : "Failed to update email.";
+    }
+
     public String changeName(String newName, long userId) {
         if (newName == null || newName.isBlank()) {
             return "Name cannot be empty!";

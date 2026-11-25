@@ -444,9 +444,11 @@ public class UserRepository {
             return new ViewAccountPageDto(
                     user.getId(),
                     user.getNickname(),
+                    user.getDisplayName(),
+                    user.getBio(),
+                    user.getRole(),
                     subscribers,
                     subscriptions,
-                    user.getBio(),
                     user.getCreatedAt(),
                     user.getLastSeen()
             );
@@ -516,6 +518,41 @@ public class UserRepository {
         } catch (Exception e) {
             e.printStackTrace();
             return -1L;
+        }
+    }
+
+    public boolean newEmail(String email, long userId, Instant instant) {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                int updatedRows = session.createMutationQuery(
+                                "update User " +
+                                        "set email = :email, updatedAt = :instant " +
+                                        "where id = :userId"
+                        )
+                        .setParameter("email", email)
+                        .setParameter("instant", instant)
+                        .setParameter("userId", userId)
+                        .executeUpdate();
+
+                if (updatedRows <= 0) {
+                    transaction.rollback();
+                    return false;
+                }
+
+                transaction.commit();
+                updateLastSeen(userId, Instant.now());
+                return true;
+            } catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                if (e instanceof ConstraintViolationException || e.getCause() instanceof ConstraintViolationException) {
+                    return false;
+                }
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
