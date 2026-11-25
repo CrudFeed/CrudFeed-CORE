@@ -1,8 +1,8 @@
 package org.crudfeed.core.repository;
 
-import org.crudfeed.core.dto.account.GetBannedRequestDto;
-import org.crudfeed.core.dto.account.ShowFriendsListRequestDto;
-import org.crudfeed.core.dto.account.ViewAccountPageRequestDto;
+import org.crudfeed.core.dto.account.GetBannedDto;
+import org.crudfeed.core.dto.account.ShowFriendsListDto;
+import org.crudfeed.core.dto.account.ViewAccountPageDto;
 import org.crudfeed.core.model.FriendFlags;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -97,7 +97,7 @@ public class UserRepository {
         }
     }
 
-    public GetBannedRequestDto getBanned(long userId) {
+    public GetBannedDto getBanned(long userId) {
         try (Session session = sessionFactory.openSession()) {
             boolean banned = session.createQuery(
                     "select u.banned " +
@@ -107,7 +107,7 @@ public class UserRepository {
                     )
                     .setParameter("userId", userId)
                     .uniqueResult();
-            return new GetBannedRequestDto(userId, banned);
+            return new GetBannedDto(userId, banned);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -368,7 +368,7 @@ public class UserRepository {
 
 
 
-    public List<ShowFriendsListRequestDto> showFriendsList(long userId) {
+    public List<ShowFriendsListDto> showFriendsList(long userId) {
         Map<Long, FriendFlags> friendsInfo = findFriendsInfo(userId);
 
         if (friendsInfo.isEmpty()) {
@@ -385,8 +385,7 @@ public class UserRepository {
                             f.getId(),
                             new FriendFlags(false, false)
                     );
-                    return new ShowFriendsListRequestDto(
-                            userId,
+                    return new ShowFriendsListDto(
                             f.getId(),
                             f.getNickname(),
                             flags.isUserConfirmed(),
@@ -422,7 +421,7 @@ public class UserRepository {
         }
     }
 
-    public ViewAccountPageRequestDto viewAccountPage(String nickname) {
+    public ViewAccountPageDto viewAccountPage(String nickname) {
         try (Session session = sessionFactory.openSession()) {
             User user = session.createQuery(
                             "from User u where u.nickname = :nickname",
@@ -437,7 +436,7 @@ public class UserRepository {
             long subscribers = getSubscribersCount(user.getId());
             long subscriptions = getSubscriptionsCount(user.getId());
 
-            return new ViewAccountPageRequestDto(
+            return new ViewAccountPageDto(
                     user.getId(),
                     user.getNickname(),
                     subscribers,

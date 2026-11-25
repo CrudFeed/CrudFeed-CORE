@@ -5,4 +5,9 @@ public record SignUpRequestDto(
         String nickname,
         String displayName,
         String password
-) {}
+) {
+    @Override
+    public String toString() {
+        return "SignUpRequestDto[email=" + email + ", password=***]";
+    }
+}

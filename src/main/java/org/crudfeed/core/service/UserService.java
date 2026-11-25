@@ -1,8 +1,8 @@
 package org.crudfeed.core.service;
 
-import org.crudfeed.core.dto.account.GetBannedRequestDto;
-import org.crudfeed.core.dto.account.ShowFriendsListRequestDto;
-import org.crudfeed.core.dto.account.ViewAccountPageRequestDto;
+import org.crudfeed.core.dto.account.GetBannedDto;
+import org.crudfeed.core.dto.account.ShowFriendsListDto;
+import org.crudfeed.core.dto.account.ViewAccountPageDto;
 import org.crudfeed.core.entity.User;
 import org.crudfeed.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public GetBannedRequestDto getBanned(long userId) {
+    public GetBannedDto getBanned(long userId) {
         return userRepository.getBanned(userId);
     }
 
@@ -72,7 +72,7 @@ public class UserService {
                 : "Successfully removed!";
     }
 
-    public List<ShowFriendsListRequestDto> showFriendsList(long userId) {
+    public List<ShowFriendsListDto> showFriendsList(long userId) {
         if (userId <= 0) {
             return List.of();
         }
@@ -80,7 +80,7 @@ public class UserService {
         return userRepository.showFriendsList(userId);
     }
 
-    public ViewAccountPageRequestDto viewAccountPage(String nickname) {
+    public ViewAccountPageDto viewAccountPage(String nickname) {
         if (nickname == null || nickname.isBlank()) {
             return null;
         }

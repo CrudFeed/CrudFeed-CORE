@@ -1,6 +1,6 @@
 package org.crudfeed.core.dto.account;
 
-public record GetBannedRequestDto(
+public record GetBannedDto(
        long userId,
        boolean banned
 ) {}

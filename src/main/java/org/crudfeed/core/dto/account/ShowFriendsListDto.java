@@ -1,7 +1,6 @@
 package org.crudfeed.core.dto.account;
 
-public record ShowFriendsListRequestDto(
-        long userId,
+public record ShowFriendsListDto(
         long friendId,
         String friendName,
         boolean isUserConfirmed,

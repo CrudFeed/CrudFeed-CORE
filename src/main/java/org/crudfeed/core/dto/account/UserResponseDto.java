@@ -1,9 +1,11 @@
 package org.crudfeed.core.dto.account;
 
+import org.crudfeed.core.entity.Role;
+
 public record UserResponseDto(
         long id,
         String email,
         String nickname,
         String displayName,
-        org.crudfeed.core.entity.Role role
+        Role role
 ) {}

@@ -172,7 +172,7 @@ public class ModRepository {
                 }
 
                 transaction.commit();
-                return new ModRoleInfoResponseDto(userId,  role);
+                return new ModRoleInfoResponseDto(role);
             } catch (Exception e) {
                 if (transaction != null && transaction.getStatus().canRollback()) {
                     transaction.rollback();
