@@ -221,58 +221,92 @@ public class PostRepository {
     public String likePost(long postId, long userId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
+            try {
+                if (userId <= 0 || postId <= 0) {
+                    transaction.rollback();
+                    return "Invalid user or post id!";
+                }
 
-            Post post = session.get(Post.class, postId);
-            User user = session.get(User.class, userId);
+                int likedPosts = session.createNativeMutationQuery(
+                                "insert into user_liked_posts(user_id, post_id) " +
+                                        "values (:userId, :postId) " +
+                                        "on conflict (user_id, post_id) do nothing"
+                        )
+                        .setParameter("userId", userId)
+                        .setParameter("postId", postId)
+                        .executeUpdate();
 
-            if (post == null || user == null) {
-                return "Post not found!";
+                if (likedPosts <= 0) {
+                    transaction.rollback();
+                    return "Post is already liked!";
+                }
+
+                int deletedDislikes = session.createNativeMutationQuery(
+                                "delete from user_disliked_posts " +
+                                        "where user_id = :userId " +
+                                        "and post_id = :postId"
+                        )
+                        .setParameter("userId", userId)
+                        .setParameter("postId", postId)
+                        .executeUpdate();
+
+                transaction.commit();
+                return deletedDislikes > 0
+                        ? "Post liked and dislike removed!"
+                        : "Post liked!";
+            } catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+                return "Error during like process!";
             }
-
-//            if (post.getLikedByUsers().contains(user)) {
-//                return "Post already liked!";
-//            }
-//
-//            post.getLikedByUsers().add(user);
-//            post.setLikes(post.getLikes() + 1);
-
-            session.merge(post);
-            transaction.commit();
-
-            return "Post successfully liked!";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error during like process!";
         }
     }
 
     public String dislikePost(long postId, long userId) {
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
+            try {
+                if (userId <= 0 || postId <= 0) {
+                    transaction.rollback();
+                    return "Invalid user or post id!";
+                }
 
-            Post post = session.get(Post.class, postId);
-            User user = session.get(User.class, userId);
+                int dislikedPosts = session.createNativeMutationQuery(
+                                "insert into user_disliked_posts(user_id, post_id) " +
+                                        "values (:userId, :postId) " +
+                                        "on conflict (user_id, post_id) do nothing"
+                        )
+                        .setParameter("userId", userId)
+                        .setParameter("postId", postId)
+                        .executeUpdate();
 
-            if (post == null || user == null) {
-                return "Post not found!";
+                if (dislikedPosts <= 0) {
+                    transaction.rollback();
+                    return "Post is already disliked!";
+                }
+
+                int deletedLikes = session.createNativeMutationQuery(
+                                "delete from user_liked_posts " +
+                                        "where user_id = :userId " +
+                                        "and post_id = :postId"
+                        )
+                        .setParameter("userId", userId)
+                        .setParameter("postId", postId)
+                        .executeUpdate();
+
+                transaction.commit();
+                return deletedLikes > 0
+                        ? "Post disliked and like removed!"
+                        : "Post disliked!";
+            } catch (Exception e) {
+                if (transaction != null && transaction.getStatus().canRollback()) {
+                    transaction.rollback();
+                }
+                e.printStackTrace();
+                return "Error during dislike process!";
             }
-
-//            if (!post.getLikedByUsers().contains(user)) {
-//                return "You have not liked this post yet!";
-//            }
-//
-//            post.getLikedByUsers().remove(user);
-//            post.setLikes(Math.max(0, post.getLikes() - 1));
-
-            session.merge(post);
-            transaction.commit();
-
-            return "Like removed!";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error during dislike process!";
         }
     }
 }
